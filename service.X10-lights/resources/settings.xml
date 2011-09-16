@@ -1,0 +1,6 @@
+<settings>
+    <setting id="IP" label="30000" type="ipaddress" default="127.0.0.1"/>
+    <setting id="PORT" label="30001" type="text" default="8086"/>
+    <setting id="DEVID" label="30002" type="text" default="A1"/>
+</settings>
+

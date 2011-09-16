@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<strings>
+    <string id="30000">X10 Commander IP adres</string>
+    <string id="30001">X10 Commander Port</string>
+    <string id="30002">X10 Commander Device ID</string>
+</strings>
