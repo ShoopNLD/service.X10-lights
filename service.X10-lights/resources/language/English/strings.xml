@@ -1,6 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Document   : settings.xml
+    Package    : X10 Commander Lights
+    Author     : Majestic Soft
+    Copyright  : 2011, Majestic Soft, NL
+    License    : Gnu General Public License - see LICENSE.TXT
+    Description: English language strings for X10 Commander Lights
+-->
 <strings>
+    <!-- Addon Settings Categories -->
+    <string id="30500">Host</string>
+    <string id="30501">X10 Devices</string>
+    <string id="30502">XBMC Events</string>
+    <string id="30503">Player Events</string>
+    <!-- Addon Settings -->
     <string id="30000">X10 Commander IP address</string>
     <string id="30001">X10 Commander Port</string>
-    <string id="30002">X10 Commander Device ID</string>
+    <string id="30100">X10 Commander Device ID</string>
+    <string id="30101">X10 Device Application</string>
+    <string id="30200">XBMC Start action</string>
+    <string id="30201">Percentage (%)</string>
+    <string id="30210">XBMC Stop action</string>
+    <string id="30211">Percentage (%)</string>
+    <string id="30300">Player Start action</string>
+    <string id="30301">Percentage (%)</string>
+    <string id="30310">Player Stop action</string>
+    <string id="30311">Percentage (%)</string>
+    <string id="30320">Player Pause action</string>
+    <string id="30321">Percentage (%)</string>
+    <string id="30330">Player Resume action</string>
+    <string id="30331">Percentage (%)</string>
+    <string id="30340">Player End action</string>
+    <string id="30341">Percentage (%)</string>
 </strings>

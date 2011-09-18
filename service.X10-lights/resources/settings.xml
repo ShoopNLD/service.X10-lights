@@ -1,6 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+    Document   : settings.xml
+    Package    : X10 Commander Lights
+    Author     : Majestic Soft
+    Copyright  : 2011, Majestic Soft, NL
+    License    : Gnu General Public License - see LICENSE.TXT
+    Description: Setting categories and entries for X10 Commander Lights
+-->
 <settings>
-    <setting id="IP" label="30000" type="ipaddress" default="127.0.0.1"/>
-    <setting id="PORT" label="30001" type="text" default="8086"/>
-    <setting id="DEVID" label="30002" type="text" default="A1"/>
+    <category label="30500">
+        <setting id="IP" label="30000" type="ipaddress" default="127.0.0.1"/>
+        <setting id="PORT" label="30001" type="text" default="8086"/>
+    </category>
+    <category label="30501">
+        <setting id="DEVID" label="30100" type="text" default="A1"/>
+        <setting id="DEVAPP" label="30101" type="enum" values="X10 Commander" default="0"/>
+    </category>
+    <category label="30502">
+        <setting id="XEVSTART" label="30200" type="enum" values="DIM|BRIGHT" default="0"/>
+        <setting id="XEVSTARTPERC" label="30201" type="text" default="50"/>
+        <setting id="XEVSTOP" label="30210" type="enum" values="DIM|BRIGHT" default="0"/>
+        <setting id="XEVSTOPPERC" label="30211" type="text" default="100"/>
+    </category>
+    <category label="30503">
+        <setting id="PEVSTART" label="30300" type="enum" values="DIM|BRIGHT" default="0"/>
+        <setting id="PEVSTARTPERC" label="30301" type="text" default="100"/>
+        <setting id="PEVSTOP" label="30310" type="enum" values="DIM|BRIGHT" default="1"/>
+        <setting id="PEVSTOPPERC" label="30311" type="text" default="50"/>
+        <setting id="PEVPAUSE" label="30320" type="enum" values="DIM|BRIGHT" default="1"/>
+        <setting id="PEVPAUSEPERC" label="30321" type="text" default="50"/>
+        <setting id="PEVRESUME" label="30330" type="enum" values="DIM|BRIGHT" default="0"/>
+        <setting id="PEVRESUMEPERC" label="30331" type="text" default="100"/>
+        <setting id="PEVEND" label="30340" type="enum" values="DIM|BRIGHT" default="1"/>
+        <setting id="PEVENDPERC" label="30341" type="text" default="50"/>
+    </category>
 </settings>
 

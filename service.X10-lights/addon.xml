@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+    Document   : addon.xml
+    Package    : X10 Commander Lights
+    Author     : Majestic Soft
+    Copyright  : 2011, Majestic Soft, NL
+    License    : Gnu General Public License - see LICENSE.TXT
+    Description: Addon details for X10 Commander Lights
+-->
 <addon id="service.X10-lights"
        name="X10 Commander Lights"
-       version="0.0.1"
+       version="0.0.2"
        provider-name="Majestic Soft">
   <requires>
     <import addon="xbmc.python" version="1.0"/>

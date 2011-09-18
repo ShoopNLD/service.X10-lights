@@ -1,3 +1,16 @@
+[B]0.0.2 - 18SEP2011[/B]
+- Updated: Configuration, split up in different categories.
+- Added: Category [I]HOST[/I].
+- Settings: IP and Port
+
+- Added: Category [I]X10 Devices[/I].
+- Settings: House code and Application used to control X10 device
+
+- Added: Category [I]XBMC Events[/I].
+- Settings: Start and Stop (DIM/BRIGHT 0-100%)
+
+- Added: Category [I]Player Events[/I].
+- Settings: Play, Stop, End, Pause, Resume (DIM/BRIGHT 0-100%)
+
 [B]0.0.1 - 16SEP2011[/B]
 - Initial release
-
