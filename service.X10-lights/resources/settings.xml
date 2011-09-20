@@ -14,7 +14,7 @@
     </category>
     <category label="30501">
         <setting id="DEVID" label="30100" type="text" default="A1"/>
-        <setting id="DEVAPP" label="30101" type="enum" values="X10 Commander" default="0"/>
+        <setting id="DEVAPP" label="30101" type="enum" values="X10 Commander|HomeSeer" default="0"/>
     </category>
     <category label="30502">
         <setting id="XEVSTART" label="30200" type="enum" values="DIM|BRIGHT" default="0"/>

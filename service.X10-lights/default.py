@@ -1,5 +1,15 @@
 # X10-Light - Service
-
+"""
+    Document   : default.py
+    Package    : X10 Commander Lights
+    Author     : Majestic Soft
+    Copyright  : 2011, Majestic Soft, NL
+    License    : Gnu General Public License - see LICENSE.TXT
+    Description: General control code for X10 Commander Lights
+    Revision   : 0.0.3
+                 Added: this descriptive text
+                 Added: HomeSeer control via tenHsServer (http://www.tenholder.net/tenWare2/tenHsServer/default.aspx)
+"""
 # IMPORT LIBRARIES
 import sys
 import os
@@ -31,6 +41,13 @@ my_ip = __addon__.getSetting("IP")
 my_port = __addon__.getSetting("PORT")
 # ADDON X10 DEVICE SETTINGS
 my_devid = __addon__.getSetting("DEVID")
+my_devapp_temp = __addon__.getSetting("DEVAPP")
+
+if my_devapp_temp == "1":
+    my_devapp = "HOMESEER"
+else:
+    my_devapp = "X10_COMMANDER"
+
 # ADDON XBMC EVENT SETTINGS
 my_xevstart_tmp = __addon__.getSetting("XEVSTART")
 my_xevstartperc = __addon__.getSetting("XEVSTARTPERC")
@@ -89,6 +106,7 @@ xbmc.log('X10-Light: IP number          : ' + my_ip)
 xbmc.log('X10-Light: PORT number        : ' + my_port)
 xbmc.log('X10-Light: ************ Addon X10 Device settings **********')
 xbmc.log('X10-Light: Device ID          : ' + my_devid)
+xbmc.log('X10-Light: Device Application : ' + my_devapp)
 xbmc.log('X10-Light: ************ Addon XBMC event settings **********')
 xbmc.log('X10-Light: Start Action       : ' + my_xevstart)
 xbmc.log('X10-Light: Start Action (%)   : ' + my_xevstartperc)
@@ -112,16 +130,29 @@ xbmc.log('X10-Light: Addon settings are read and shown in log file')
 xbmc.log('X10-Light: ******************** STARTUP ********************')
 #START Initialisation cycle
 #Make sure Device is on
-urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' ON"')
+if my_devapp == "HOMESEER":
+    urllib2.urlopen('http://' + my_ip + ':' + my_port + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d=' + my_devid + '&a=ON')
+else:
+    urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' ON"')
+
 xbmc.log('X10-Light: Switch on Device')
+
 #Make sure Device brightness is 100%
-urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' BRIGHT 100"')
+if my_devapp == "HOMESEER":
+    urllib2.urlopen('http://' + my_ip + ':' + my_port + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d=' + my_devid + '&a=BRIGHT&s=100')
+else:
+    urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' BRIGHT 100"')
+
 xbmc.log('X10-Light: Brighten lights with 100%')
 #END Initialisation cycle
 
 xbmc.log('X10-Light: ****************** START EVENT ******************')
 #Execute XBMC START Event settings on Device
-urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' ' + my_xevstart + ' ' + my_xevstartperc + '"')
+if my_devapp == "HOMESEER":
+    urllib2.urlopen('http://' + my_ip + ':' + my_port + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d=' + my_devid + '&a=' + my_xevstart + '&s=' + my_xevstartperc + '')
+else:
+    urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' ' + my_xevstart + ' ' + my_xevstartperc + '"')
+
 xbmc.log('X10-Light: ' + my_xevstart + 'lights with ' + my_xevstartperc + '%')
 xbmc.log('X10-Light: *************************************************')
 
@@ -138,35 +169,55 @@ class MyPlayer(xbmc.Player) :
         if xbmc.Player().isPlayingVideo():
             xbmc.log('X10-Light: PLAYBACK STARTED')
             #Execute Player START Event settings on Device
-            urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' ' + my_pevstart + ' ' + my_pevstartperc + '"')
+            if my_devapp == "HOMESEER":
+                urllib2.urlopen('http://' + my_ip + ':' + my_port + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d=' + my_devid + '&a=' + my_pevstart + '&s=' + my_pevstartperc + '')
+            else:
+                urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' ' + my_pevstart + ' ' + my_pevstartperc + '"')
+                
             xbmc.log('X10-Light: ' + my_pevstart + 'lights with ' + my_pevstartperc + '%')
             
     def onPlayBackEnded(self):
         if (VIDEO == 1):
             xbmc.log('X10-Light: PLAYBACK ENDED')
             #Execute Player END Event settings on Device
-            urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' ' + my_pevend + ' ' + my_pevendperc + '"')
+            if my_devapp == "HOMESEER":
+                urllib2.urlopen('http://' + my_ip + ':' + my_port + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d=' + my_devid + '&a=' + my_pevend + '&s=' + my_pevendperc + '')
+            else:
+                urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' ' + my_pevend + ' ' + my_pevendperc + '"')
+            
             xbmc.log('X10-Light: ' + my_pevend + 'lights with ' + my_pevendperc + '%')
             
     def onPlayBackStopped(self):
         if (VIDEO == 1):
             xbmc.log('X10-Light: PLAYBACK STOPPED')
             #Execute Player STOP Event settings on Device
-            urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' ' + my_pevstop + ' ' + my_pevstopperc + '"')
+            if my_devapp == "HOMESEER":
+                urllib2.urlopen('http://' + my_ip + ':' + my_port + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d=' + my_devid + '&a=' + my_pevstop + '&s=' + my_pevstopperc + '')
+            else:
+                urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' ' + my_pevstop + ' ' + my_pevstopperc + '"')
+            
             xbmc.log('X10-Light: ' + my_pevstop + 'lights with ' + my_pevstopperc + '%')
             
     def onPlayBackPaused(self):
         if xbmc.Player().isPlayingVideo():
             xbmc.log('X10-Light: PLAYBACK PAUSED')
             #Execute Player PAUSE Event settings on Device
-            urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' ' + my_pevpause + ' ' + my_pevpauseperc + '"')
+            if my_devapp == "HOMESEER":
+                urllib2.urlopen('http://' + my_ip + ':' + my_port + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d=' + my_devid + '&a=' + my_pevpause + '&s=' + my_pevpauseperc + '')
+            else:
+                urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' ' + my_pevpause + ' ' + my_pevpauseperc + '"')
+                
             xbmc.log('X10-Light: ' + my_pevpause + 'lights with ' + my_pevpauseperc + '%')
             
     def onPlayBackResumed(self):
         if xbmc.Player().isPlayingVideo():
             xbmc.log('X10-Light: PLAYBACK RESUMED')
             #Execute Player RESUME Event settings on Device
-            urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' ' + my_pevresume + ' ' + my_pevresumeperc + '"')
+            if my_devapp == "HOMESEER":
+                urllib2.urlopen('http://' + my_ip + ':' + my_port + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d=' + my_devid + '&a=' + my_pevresume + '&s=' + my_pevresumeperc + '')
+            else:
+                urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' ' + my_pevresume + ' ' + my_pevresumeperc + '"')
+            
             xbmc.log('X10-Light: ' + my_pevresume + 'lights with ' + my_pevresumeperc + '%')
             
 player=MyPlayer()
@@ -181,10 +232,19 @@ while (not xbmc.abortRequested):
 
 while (xbmc.abortRequested):
     #Execute XBMC STOP Event settings on Device
-    urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' ' + my_xevstop + ' ' + my_xevstopperc + '"')
+    if my_devapp == "HOMESEER":
+        urllib2.urlopen('http://' + my_ip + ':' + my_port + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d=' + my_devid + '&a=' + my_xevstop + '&s=' + my_xevstopperc + '')
+    else:
+        urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' ' + my_xevstop + ' ' + my_xevstopperc + '"')
+        
     xbmc.log('X10-Light: ' + my_xevstop + 'lights with ' + my_xevstopperc + '%')
+    
     #MSwitch Device is off
-    urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' OFF"')
+    if my_devapp == "HOMESEER":
+        urllib2.urlopen('http://' + my_ip + ':' + my_port + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d=' + my_devid + '&a=OFF')
+    else:
+        urllib2.urlopen('http://' + my_ip + ':' + my_port + '/?x10command=DEVICE~sendplc~"' + my_devid + ' OFF"')
+        
     xbmc.log('X10-Light: Switch lights off')
 
 xbmc.log('X10-Light: *************************************************')

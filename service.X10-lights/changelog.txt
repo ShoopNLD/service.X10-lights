@@ -1,3 +1,6 @@
+[B]0.0.3 - 20SEP2011[/B]
+- Added: HomeSeer application (via tenHsServer).
+
 [B]0.0.2 - 18SEP2011[/B]
 - Updated: Configuration, split up in different categories.
 - Added: Category [I]HOST[/I].
