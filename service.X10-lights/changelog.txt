@@ -1,3 +1,6 @@
+[B]0.0.4 - 25SEP2011[/B]
+- Updated: HomeSeer application (removed tenHsServer).
+
 [B]0.0.3 - 20SEP2011[/B]
 - Added: HomeSeer application (via tenHsServer).
 

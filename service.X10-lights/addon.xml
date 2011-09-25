@@ -9,7 +9,7 @@
 -->
 <addon id="service.X10-lights"
        name="X10 Commander Lights"
-       version="0.0.2"
+       version="0.0.4"
        provider-name="Majestic Soft">
   <requires>
     <import addon="xbmc.python" version="1.0"/>
@@ -21,9 +21,13 @@
   <extension point="xbmc.addon.metadata">
     <summary>X10 Commander Lights</summary>
     <summary lang="nl">X10 Commander Lampen</summary>
-    <description>Controls lights during watching of a video, via a domotica server running the X10 Commander software from Melloware.
+    <description>Controls lights during watching of a video, via a domotica server:
+    - X10 Commander software from Melloware.
+    - HomeSeer
     </description>
-    <description lang="nl">Bediend lampen tijdens het bekijken van een video, via een domotica server waar de X10 Commander software van Melloware op draait.
+    <description lang="nl">Bediend lampen tijdens het bekijken van een video, via een domotica server
+    - X10 Commander software van Melloware
+    - HomeSeer.
     </description>
     <platform>all</platform>
   </extension>
