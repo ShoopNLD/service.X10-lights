@@ -1,3 +1,13 @@
+[B]0.0.5 - 25FEB2012[/B]
+- Solved: Issue 1, No more error message at startup when Add-on is not configured (Clean install)
+- Solved: Issue 2, Stop event is now working.
+- Changed: [CORE] X10-Commander handling to seperate function (for easier expansion of new Applications)
+- Changed: [CORE] HomeSeer handling to seperate function (for easier expansion of new Applications)
+- Added: [CORE] Selection function to call the appropriate Application function.
+- Added: Improved fault handling and logging on event failure's
+- Added: Device Actions (ON and OFF) to events
+- Added: tenHsServer to see how easy modularity now works.
+
 [B]0.0.4 - 25SEP2011[/B]
 - Updated: HomeSeer application (removed tenHsServer).
 
