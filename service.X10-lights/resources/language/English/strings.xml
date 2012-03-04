@@ -10,26 +10,25 @@
 <strings>
     <!-- Addon Settings Categories -->
     <string id="30500">Host</string>
-    <string id="30501">X10 Devices</string>
+    <string id="30501">Devices</string>
     <string id="30502">XBMC Events</string>
     <string id="30503">Player Events</string>
     <!-- Addon Settings -->
-    <string id="30000">X10 Commander IP address</string>
-    <string id="30001">X10 Commander Port</string>
-    <string id="30100">X10 Commander Device ID</string>
-    <string id="30101">X10 Device Application</string>
-    <string id="30200">XBMC Start action</string>
+    <string id="30000">Application IP address</string>
+    <string id="30001">Application Port</string>
+    <string id="30002">Application Security</string>
+    <string id="30003">Application Username</string>
+    <string id="30004">Application Password</string>
+    <string id="30100">Device Application</string>
+    <string id="30101">Device ID</string>    
+    <string id="30200">Action</string>
     <string id="30201">Percentage (%)</string>
-    <string id="30210">XBMC Stop action</string>
-    <string id="30211">Percentage (%)</string>
-    <string id="30300">Player Start action</string>
-    <string id="30301">Percentage (%)</string>
-    <string id="30310">Player Stop action</string>
-    <string id="30311">Percentage (%)</string>
-    <string id="30320">Player Pause action</string>
-    <string id="30321">Percentage (%)</string>
-    <string id="30330">Player Resume action</string>
-    <string id="30331">Percentage (%)</string>
-    <string id="30340">Player End action</string>
-    <string id="30341">Percentage (%)</string>
+    <string id="30202">Command</string>
+    <string id="30203">Value</string>
+    <string id="30204">Start event</string>
+    <string id="30205">Stop event</string>
+    <string id="30206">Pause event</string>
+    <string id="30207">Resume event</string>
+    <string id="30208">End event</string>
+    <string id="30209">Free definable Action</string>
 </strings>

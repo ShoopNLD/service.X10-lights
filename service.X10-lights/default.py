@@ -6,6 +6,12 @@
     Copyright  : 2011, Majestic Soft, NL
     License    : Gnu General Public License - see LICENSE.TXT
     Description: General control code for X10 Commander Lights
+    Revision   : 0.0.6 alpha
+                 Added: Enable/Disable of Events
+                 Added: Free or predefinded commands per Event
+                 Added: Switch King
+                 Updated: [CORE] Selection function to handle Free commands
+                 Updated: [CORE] Application functions to handle Free commands
     Revision   : 0.0.5
                  Solved: Issue 1, No more error message at startup when Add-on is not configured (Clean install)
                  Solved: Issue 2, Stop event is now working.
@@ -35,7 +41,7 @@ import urllib2
 
 # X10-COMMANDER FUNCTION
 #This function Will execute the requested action in X10-Commander 
-def X10Commander(URL, ID, Action, Percentage):
+def X10Commander(URL, ID, Action, Value, FreeCmd):
     #X10-COMMANDER STYLE
     #Example strings
     #In which: my_url = http://172.0.0.1:8086/?x10command=DEVICE~sendplc~"
@@ -45,58 +51,66 @@ def X10Commander(URL, ID, Action, Percentage):
     #urllib2.urlopen(my_url + DeviceID + ' DIM ' + DevicePercentage + '"') = http://172.0.0.1:8086/?x10command=DEVICE~sendplc~"A1 BRIGHT 100"
     #these are with a plus, since the my_data needs to be concatenated with the url
     try:
-        if Action == "ON":
-            ActionData = ID + ' ON"'
-            xbmc.log('X10-Light: Switch lights or Device ON')
-        elif Action == "OFF":
-            ActionData = ID + ' OFF"'
-            xbmc.log('X10-Light: Switch lights or Device OFF')
-        elif Action == "BRIGHT":
-            ActionData = ID + ' BRIGHT ' + Percentage + '"'
-            xbmc.log('X10-Light: Brighten lights with ' + Percentage + '%')
-        elif Action == "DIM":
-            ActionData = ID + ' DIM ' + Percentage + '"'
-            xbmc.log('X10-Light: Dim lights with ' + Percentage + '%')
+        if FreeCmd == "true":
+            ActionData = ID + ' ' + Action + ' '+ Value + '"'
+            xbmc.log('X10-Light: X10-Commander, Action: ' + Action + ', with value: ' + Value + '.')
         else:
-            xbmc.log('X10-Light: No Action available!')
+            if Action == "ON":
+                ActionData = ID + ' ON"'
+                xbmc.log('X10-Light: X10-Commander, Switch lights or Device ON')
+            elif Action == "OFF":
+                ActionData = ID + ' OFF"'
+                xbmc.log('X10-Light: X10-Commander, Switch lights or Device OFF')
+            elif Action == "BRIGHT":
+                ActionData = ID + ' BRIGHT ' + Value + '"'
+                xbmc.log('X10-Light: X10-Commander, Brighten lights with ' + Value + '%')
+            elif Action == "DIM":
+                ActionData = ID + ' DIM ' + Value + '"'
+                xbmc.log('X10-Light: X10-Commander, Dim lights with ' + Value + '%')
+            else:
+                xbmc.log('X10-Light: X10-Commander, No Action available!')
 
         X10CommanderRequest = urllib2.urlopen(URL + ActionData)
         xbmc.log('X10-Light: Action Send to X10-Commander')
     except:
-        xbmc.log('X10-Light: The ' + Action + ' Event Failed')
+        xbmc.log('X10-Light: X10-Commander, The ' + Action + ' Event Failed')
     return
 
 # HOMESEER FUNCTION 
 #This function Will execute the requested action in HomeSeer 
-def HomeSeer(URL, ID, Action, Percentage):
+def HomeSeer(URL, ID, Action, Value, FreeCmd):
     #HOMESEER STYLE
     #Example strings
     #urllib2.urlopen(my_url, my_data), this is with a comma, since the my_data needs to be encoded
     try:
-        if Action == "ON":
-            ActionData = urllib.urlencode({'control_device':ID + '=ON'})
-            xbmc.log('X10-Light: Switch lights or Device ON')
-        elif Action == "OFF":
-            ActionData = urllib.urlencode({'control_device':ID + '=OFF'})
-            xbmc.log('X10-Light: Switch lights or Device OFF')
-        elif Action == "BRIGHT":
-            ActionData = urllib.urlencode({'control_device':ID + '=BRIGHT=' + Percentage})
-            xbmc.log('X10-Light: Brighten lights with ' + Percentage + '%')
-        elif Action == "DIM":
-            ActionData = urllib.urlencode({'control_device':ID + '=DIM=' + Percentage})
-            xbmc.log('X10-Light: Dim lights with ' + Percentage + '%')
+        if FreeCmd == "true":
+            ActionData = urllib.urlencode({'control_device':ID + '=' + Action + '=' + Value})
+            xbmc.log('X10-Light: HomeSeer, Action: ' + Action + ', with value: ' + Value + '.')
         else:
-            xbmc.log('X10-Light: No Action available!')
+            if Action == "ON":
+                ActionData = urllib.urlencode({'control_device':ID + '=ON'})
+                xbmc.log('X10-Light: HomeSeer, Switch lights or Device ON')
+            elif Action == "OFF":
+                ActionData = urllib.urlencode({'control_device':ID + '=OFF'})
+                xbmc.log('X10-Light: HomeSeer, Switch lights or Device OFF')
+            elif Action == "BRIGHT":
+                ActionData = urllib.urlencode({'control_device':ID + '=BRIGHT=' + Value})
+                xbmc.log('X10-Light: HomeSeer, Brighten lights with ' + Value + '%')
+            elif Action == "DIM":
+                ActionData = urllib.urlencode({'control_device':ID + '=DIM=' + Value})
+                xbmc.log('X10-Light: HomeSeer, Dim lights with ' + Value + '%')
+            else:
+                xbmc.log('X10-Light: HomeSeer, No Action available!')
 
         HomeSeerRequest = urllib2.urlopen(URL, ActionData)
         xbmc.log('X10-Light: Action Send to HomeSeer')
     except:
-        xbmc.log('X10-Light: XBMC ' + Action + ' Event Failed')
+        xbmc.log('X10-Light: HomeSeer, XBMC ' + Action + ' Event Failed')
     return
 
 # TENHSSERVER FUNCTION 
 #This function Will execute the requested action in HomeSeer via tenHsServer
-def tenHsServer(URL, ID, Action, Percentage):
+def tenHsServer(URL, ID, Action, Value, FreeCmd):
     #tenHsServer STYLE
     #Example strings
     #urllib2.urlopen('http://' + my_ip + ':' + my_port + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d=' + my_devid + '&a=ON')
@@ -104,38 +118,78 @@ def tenHsServer(URL, ID, Action, Percentage):
     #urllib2.urlopen('http://' + my_ip + ':' + my_port + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d=' + my_devid + '&a=' + my_xevstart + '&s=' + my_xevstartperc + '')
     #these are with a plus, since the my_data needs to be concatenated with the url
     try:
-        if Action == "ON":
-            ActionData = ID + '&a=ON'
-            xbmc.log('X10-Light: Switch lights or Device ON')
-        elif Action == "OFF":
-            ActionData = ID + '&a=OFF'
-            xbmc.log('X10-Light: Switch lights or Device OFF')
-        elif Action == "BRIGHT":
-            ActionData = ID + '&a=BRIGHT&s=' + Percentage + ''
-            xbmc.log('X10-Light: Brighten lights with ' + Percentage + '%')
-        elif Action == "DIM":
-            ActionData = ID + '&a=DIM&s=' + Percentage + ''
-            xbmc.log('X10-Light: Dim lights with ' + Percentage + '%')
+        if FreeCmd == "true":
+            ActionData = ID + '&a=' + Action + '&s=' + Value + ''
+            xbmc.log('X10-Light: tenHsServer, Action: ' + Action + ', with value: ' + Value + '.')
         else:
-            xbmc.log('X10-Light: No Action available!')
+            if Action == "ON":
+                ActionData = ID + '&a=ON'
+                xbmc.log('X10-Light: tenHsServer, Switch lights or Device ON')
+            elif Action == "OFF":
+                ActionData = ID + '&a=OFF'
+                xbmc.log('X10-Light: tenHsServer, Switch lights or Device OFF')
+            elif Action == "BRIGHT":
+                ActionData = ID + '&a=BRIGHT&s=' + Value + ''
+                xbmc.log('X10-Light: tenHsServer, Brighten lights with ' + Value + '%')
+            elif Action == "DIM":
+                ActionData = ID + '&a=DIM&s=' + Value + ''
+                xbmc.log('X10-Light: tenHsServer, Dim lights with ' + Value + '%')
+            else:
+                xbmc.log('X10-Light: tenHsServer, No Action available!')
 
         X10CommanderRequest = urllib2.urlopen(URL + ActionData)
         xbmc.log('X10-Light: Action Send to tenHsServer')
     except:
-        xbmc.log('X10-Light: The ' + Action + ' Event Failed')
+        xbmc.log('X10-Light: tenHsServer, The ' + Action + ' Event Failed')
+    return
+
+# SWITCH KING FUNCTION 
+#This function Will execute the requested action in Switch king
+def SwitchKing(URL, ID, Action, Value, FreeCmd):
+    #Switch King STYLE
+    #Example strings
+    #http://servernamn:8800/devices/{id}/turnon
+    #http://servernamn:8800/devices/{id}/turnoff
+    #http://servernamn:8800/devices/{id}/dim/{level}
+    try:
+        if FreeCmd == "true":
+            ActionData = ID + '/' + Action + '/' + Value + ''
+            xbmc.log('X10-Light: SwitchKing, Action: ' + Action + ', with value: ' + Value + '.')
+        else:
+            if Action == "ON":
+                ActionData = ID + '/turnon'
+                xbmc.log('X10-Light: SwitchKing, Switch lights or Device ON')
+            elif Action == "OFF":
+                ActionData = ID + '/turnoff'
+                xbmc.log('X10-Light: SwitchKing, Switch lights or Device OFF')
+            elif Action == "BRIGHT":
+                ActionData = ID + '/bright/' + Value + ''
+                xbmc.log('X10-Light: SwitchKing, Brighten lights with ' + Value + '%')
+            elif Action == "DIM":
+                ActionData = ID + '/dim/' + Value + ''
+                xbmc.log('X10-Light: SwitchKing, Dim lights with ' + Value + '%')
+            else:
+                xbmc.log('X10-Light: SwitchKing, No Action available!')
+
+        X10CommanderRequest = urllib2.urlopen(URL + ActionData)
+        xbmc.log('X10-Light: Action Send to SwitchKing')
+    except:
+        xbmc.log('X10-Light: SwitchKing, The ' + Action + ' Event Failed')
     return
 
 # EXECUTEACTION FUNCTION
-def ExecuteAction(Application, URL, ID, Action, Percentage):
+def ExecuteAction(Application, URL, ID, Action, Value, FreeCmd):
     #This function is a simple selector 
     #It will call the correct Application to execute the desired action
     #This section should be expended with new aplication as they come available
     if Application == "X10-COMMANDER":
-        X10Commander(URL, ID, Action, Percentage)
+        X10Commander(URL, ID, Action, Value, FreeCmd)
     elif Application == "HOMESEER":
-        HomeSeer(URL, ID, Action, Percentage)
+        HomeSeer(URL, ID, Action, Value, FreeCmd)
     elif Application == "TENHSSERVER":
-        tenHsServer(URL, ID, Action, Percentage)
+        tenHsServer(URL, ID, Action, Value, FreeCmd)
+    elif Application == "SWITCHKING":
+        SwitchKing(URL, ID, Action, Value, FreeCmd)
     else:
         xbmc.log('X10-Light: An unknown Device Aplication is selected!')
     return
@@ -186,29 +240,92 @@ elif __addon__.getSetting("DEVAPP") == "1":
 elif __addon__.getSetting("DEVAPP") == "2":
     DeviceApplication = "TENHSSERVER"
     DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d='
+elif __addon__.getSetting("DEVAPP") == "3":
+    DeviceApplication = "SWITCHKING"
+    DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/devices/'
 else:
     DeviceApplication = "UNKOWN"
 
 # ADDON DEVICE SETTINGS
 DeviceID = __addon__.getSetting("DEVID")
 
-# ADDON XBMC EVENT SETTINGS
-XBMCStartEvent = EventAction(__addon__.getSetting("XEVSTART"))
-XBMCStartPercentage = __addon__.getSetting("XEVSTARTPERC")
-XBMCStopEvent = EventAction(__addon__.getSetting("XEVSTOP"))
-XBMCStopPercentage = __addon__.getSetting("XEVSTOPPERC")
+# ADDON EVENT SETTINGS
 
-# ADDON PLAYER EVENT SETTINGS
-PLAYERStartEvent = EventAction(__addon__.getSetting("PEVSTART"))
-PLAYERStartPercentage = __addon__.getSetting("PEVSTARTPERC")
-PLAYERStopEvent = EventAction(__addon__.getSetting("PEVSTOP"))
-PLAYERStopPercentage = __addon__.getSetting("PEVSTOPPERC")
-PLAYERPauseEvent = EventAction(__addon__.getSetting("PEVPAUSE"))
-PLAYERPausePercentage = __addon__.getSetting("PEVPAUSEPERC")
-PLAYERResumeEvent = EventAction(__addon__.getSetting("PEVRESUME"))
-PLAYERResumePercentage = __addon__.getSetting("PEVRESUMEPERC")
-PLAYEREndEvent = EventAction(__addon__.getSetting("PEVEND"))
-PLAYEREndPercentage = __addon__.getSetting("PEVENDPERC")
+
+# ADDON XBMC AND PLAYER EVENT SETTINGS (depening on Free definable Action command's = 1 or Fixed Action command's = 0)
+# with Free definable Action command's, the user has to type his own commands, and if needed his own value's
+# with Fixed Action command's, the user has can select the appropriate action (ON/OFF/DIM/BRIGHT), and if need fill out a percentage.
+#XBMC
+XBMCStartEventEnable = __addon__.getSetting("XEVSTARTENABLE")
+if __addon__.getSetting("XEVSTARTFREE") == "true":    
+    XBMCStartEvent = __addon__.getSetting("XEVSTARTCMD")
+    XBMCStartValue = __addon__.getSetting("XEVSTARTVAL")
+    XBMCStartFreeCmd = "true"
+else:
+    XBMCStartEvent = EventAction(__addon__.getSetting("XEVSTART"))
+    XBMCStartValue = __addon__.getSetting("XEVSTARTPERC")
+    XBMCStartFreeCmd = "false"
+
+XBMCStopEventEnable = __addon__.getSetting("XEVSTOPENABLE")
+if __addon__.getSetting("XEVSTOPFREE") == "true":    
+    XBMCStopEvent = __addon__.getSetting("XEVSTOPCMD")
+    XBMCStopValue = __addon__.getSetting("XEVSTOPVAL")
+    XBMCStopFreeCmd = "true"
+else:
+    XBMCStopEvent = EventAction(__addon__.getSetting("XEVSTOP"))
+    XBMCStopValue = __addon__.getSetting("XEVSTOPPERC")
+    XBMCStopFreeCmd = "false"
+
+#PLAYER
+PLAYERStartEventEnable = __addon__.getSetting("PEVSTARTENABLE")
+if __addon__.getSetting("PEVSTARTFREE") == "true":
+    PLAYERStartEvent = __addon__.getSetting("PEVSTARTCMD")
+    PLAYERStartValue = __addon__.getSetting("PEVSTARTVAL")
+    PLAYERStartFreeCmd = "true"
+else:
+    PLAYERStartEvent = EventAction(__addon__.getSetting("PEVSTART"))
+    PLAYERStartValue = __addon__.getSetting("PEVSTARTPERC")
+    PLAYERStartFreeCmd = "false"
+
+PLAYERStopEventEnable = __addon__.getSetting("PEVSTOPENABLE")
+if __addon__.getSetting("PEVSTOPFREE") == "true": 
+    PLAYERStopEvent = __addon__.getSetting("PEVSTOPCMD")
+    PLAYERStopValue = __addon__.getSetting("PEVSTOPVAL")
+    PLAYERStopFreeCmd = "true"
+else:
+    PLAYERStopEvent = EventAction(__addon__.getSetting("PEVSTOP"))
+    PLAYERStopValue = __addon__.getSetting("PEVSTOPPERC")
+    PLAYERStopFreeCmd = "false"
+
+PLAYERPauseEventEnable = __addon__.getSetting("PEVPAUSEENABLE")
+if __addon__.getSetting("PEVPAUSEFREE") == "true": 
+    PLAYERPauseEvent = __addon__.getSetting("PEVPAUSECMD")
+    PLAYERPauseValue = __addon__.getSetting("PEVPAUSEVAL")
+    PLAYERPauseFreeCmd = "true"
+else:
+    PLAYERPauseEvent = EventAction(__addon__.getSetting("PEVPAUSE"))
+    PLAYERPauseValue = __addon__.getSetting("PEVPAUSEPERC")
+    PLAYERPauseFreeCmd = "false"
+
+PLAYERResumeEventEnable = __addon__.getSetting("PEVRESUMEENABLE")
+if __addon__.getSetting("PEVPAUSEFREE") == "true": 
+    PLAYERResumeEvent = __addon__.getSetting("PEVRESUMECMD")
+    PLAYERResumeValue = __addon__.getSetting("PEVRESUMEVAL")
+    PLAYERResumeFreeCmd = "true"
+else:
+    PLAYERResumeEvent = EventAction(__addon__.getSetting("PEVRESUME"))
+    PLAYERResumeValue = __addon__.getSetting("PEVRESUMEPERC")
+    PLAYERResumeFreeCmd = "false"
+
+PLAYEREndEventEnable = __addon__.getSetting("PEVENDENABLE")
+if __addon__.getSetting("PEVPAUSEFREE") == "true": 
+    PLAYEREndEvent = __addon__.getSetting("PEVENDCMD")
+    PLAYEREndValue = __addon__.getSetting("PEVENDVAL")
+    PLAYEREndFreeCmd = "true"
+else:
+    PLAYEREndEvent = EventAction(__addon__.getSetting("PEVEND"))
+    PLAYEREndValue = __addon__.getSetting("PEVENDPERC")
+    PLAYEREndFreeCmd = "false"
 
 # ADDON SHOW INFORMATION ABOUT ALL SETTINGS
 xbmc.log('X10-Light: *************** Addon Host settings *************')
@@ -220,26 +337,26 @@ xbmc.log('X10-Light: Device Application : ' + DeviceApplication)
 xbmc.log('X10-Light: ************ Addon XBMC event settings **********')
 xbmc.log('X10-Light: Start Action       : ' + XBMCStartEvent)
 if XBMCStartEvent == "BRIGHT" or XBMCStartEvent == "DIM":
-    xbmc.log('X10-Light: Start Action (%)   : ' + XBMCStartPercentage)
+    xbmc.log('X10-Light: Start Action (%)   : ' + XBMCStartValue)
 xbmc.log('X10-Light: Stop Action        : ' + XBMCStopEvent)
 if XBMCStopEvent == "BRIGHT" or XBMCStopEvent == "DIM":
-    xbmc.log('X10-Light: Stop Action (%)    : ' + XBMCStopPercentage)
+    xbmc.log('X10-Light: Stop Action (%)    : ' + XBMCStopValue)
 xbmc.log('X10-Light: *********** Addon player event settings *********')
 xbmc.log('X10-Light: Start Action       : ' + PLAYERStartEvent)
 if PLAYERStartEvent == "BRIGHT" or PLAYERStartEvent == "DIM":
-    xbmc.log('X10-Light: Start Action (%)   : ' + PLAYERStartPercentage)
+    xbmc.log('X10-Light: Start Action (%)   : ' + PLAYERStartValue)
 xbmc.log('X10-Light: Stop Action        : ' + PLAYERStopEvent)
 if PLAYERStopEvent == "BRIGHT" or PLAYERStopEvent == "DIM":
-    xbmc.log('X10-Light: Stop Action (%)    : ' + PLAYERStopPercentage)
+    xbmc.log('X10-Light: Stop Action (%)    : ' + PLAYERStopValue)
 xbmc.log('X10-Light: Pause Action       : ' + PLAYERPauseEvent)
 if PLAYERPauseEvent == "BRIGHT" or PLAYERPauseEvent == "DIM":
-    xbmc.log('X10-Light: Pause Action (%)   : ' + PLAYERPausePercentage)
+    xbmc.log('X10-Light: Pause Action (%)   : ' + PLAYERPauseValue)
 xbmc.log('X10-Light: Resume Action      : ' + PLAYERResumeEvent)
 if PLAYERResumeEvent == "BRIGHT" or PLAYERResumeEvent == "DIM":
-    xbmc.log('X10-Light: Resume Action (%)  : ' + PLAYERResumePercentage)
+    xbmc.log('X10-Light: Resume Action (%)  : ' + PLAYERResumeValue)
 xbmc.log('X10-Light: End Action         : ' + PLAYEREndEvent)
 if PLAYEREndEvent == "BRIGHT" or PLAYEREndEvent == "DIM":
-    xbmc.log('X10-Light: End Action (%)     : ' + PLAYEREndPercentage)
+    xbmc.log('X10-Light: End Action (%)     : ' + PLAYEREndValue)
 xbmc.log('X10-Light: *************************************************')
 xbmc.log('X10-Light: Addon settings are read and shown in log file')
 
@@ -249,9 +366,9 @@ xbmc.log('X10-Light: ******************** STARTUP ********************')
 #START Initialisation cycle
 xbmc.log('X10-Light: **************** INITIALIZATION******************')
 #Make sure Device is on
-ExecuteAction(DeviceApplication, DeviceURL, DeviceID, "ON", "0")
+ExecuteAction(DeviceApplication, DeviceURL, DeviceID, "ON", "0", "false")
 #Make sure Device brightness is 100%
-ExecuteAction(DeviceApplication, DeviceURL, DeviceID, "BRIGHT", "100")
+ExecuteAction(DeviceApplication, DeviceURL, DeviceID, "BRIGHT", "100", "false")
 xbmc.log('X10-Light: *************************************************')
 #END Initialisation cycle
 
@@ -264,8 +381,9 @@ xbmc.log('X10-Light: ****************** START EVENT ******************')
 #Determine Action and Percentage (this depends only on the appropriate settings)
 
 #CALL Function, to ececute the action
-ExecuteAction(DeviceApplication, DeviceURL, DeviceID, XBMCStartEvent, XBMCStartPercentage)
-xbmc.log('X10-Light: *************************************************')
+if XBMCStartEventEnable=="true":
+    ExecuteAction(DeviceApplication, DeviceURL, DeviceID, XBMCStartEvent, XBMCStartValue, XBMCStartFreeCmd)
+    xbmc.log('X10-Light: *************************************************')
 #END XBMC START Event
 
 # ADDON PLAYER
@@ -279,32 +397,37 @@ class MyPlayer(xbmc.Player) :
         
     def onPlayBackStarted(self):
         if xbmc.Player().isPlayingVideo():
-            xbmc.log('X10-Light: PLAYBACK STARTED')
-            ExecuteAction(DeviceApplication, DeviceURL, DeviceID, PLAYERStartEvent, PLAYERStartPercentage)
+            if PLAYERStartEventEnable=="true":
+                xbmc.log('X10-Light: PLAYBACK STARTED')
+                ExecuteAction(DeviceApplication, DeviceURL, DeviceID, PLAYERStartEvent, PLAYERStartValue, PLAYERStartFreeCmd)
 
     def onPlayBackEnded(self):
         if (VIDEO == 1):
-            xbmc.log('X10-Light: PLAYBACK ENDED')
-            #Execute Player END Event settings on Device
-            ExecuteAction(DeviceApplication, DeviceURL, DeviceID, PLAYEREndEvent, PLAYEREndPercentage)
+            if PLAYEREndEventEnable=="true":
+                xbmc.log('X10-Light: PLAYBACK ENDED')
+                #Execute Player END Event settings on Device
+                ExecuteAction(DeviceApplication, DeviceURL, DeviceID, PLAYEREndEvent, PLAYEREndValue, PLAYEREndFreeCmd)
 
     def onPlayBackStopped(self):
         if (VIDEO == 1):
-            xbmc.log('X10-Light: PLAYBACK STOPPED')
-            #Execute Player STOP Event settings on Device
-            ExecuteAction(DeviceApplication, DeviceURL, DeviceID, PLAYERStopEvent, PLAYERStopPercentage)
+            if PLAYERStopEventEnable=="true":
+                xbmc.log('X10-Light: PLAYBACK STOPPED')
+                #Execute Player STOP Event settings on Device
+                ExecuteAction(DeviceApplication, DeviceURL, DeviceID, PLAYERStopEvent, PLAYERStopValue, PLAYERStopFreeCmd)
  
     def onPlayBackPaused(self):
         if xbmc.Player().isPlayingVideo():
-            xbmc.log('X10-Light: PLAYBACK PAUSED')
-            #Execute Player PAUSE Event settings on Device
-            ExecuteAction(DeviceApplication, DeviceURL, DeviceID, PLAYERPauseEvent, PLAYERPausePercentage)
+            if PLAYERPausedEventEnable=="true":
+                xbmc.log('X10-Light: PLAYBACK PAUSED')
+                #Execute Player PAUSE Event settings on Device
+                ExecuteAction(DeviceApplication, DeviceURL, DeviceID, PLAYERPauseEvent, PLAYERPauseValue, PLAYERPauseFreeCmd)
 
     def onPlayBackResumed(self):
         if xbmc.Player().isPlayingVideo():
-            xbmc.log('X10-Light: PLAYBACK RESUMED')
-            #Execute Player RESUME Event settings on Device
-            ExecuteAction(DeviceApplication, DeviceURL, DeviceID, PLAYERResumeEvent, PLAYERResumePercentage)
+            if PLAYERResumeEventEnable=="true":
+                xbmc.log('X10-Light: PLAYBACK RESUMED')
+                #Execute Player RESUME Event settings on Device
+                ExecuteAction(DeviceApplication, DeviceURL, DeviceID, PLAYERResumeEvent, PLAYERResumeValue, PLAYERResumeFreeCmd)
 
 player=MyPlayer()
 
@@ -317,14 +440,16 @@ while (not xbmc.abortRequested):
     xbmc.sleep(1000)
 
 if (xbmc.abortRequested):
-    #START XBMC STOP Event
-    xbmc.log('X10-Light: ****************** STOP EVENT ******************')
-    ExecuteAction(DeviceApplication, DeviceURL, DeviceID, XBMCStopEvent, XBMCStopPercentage)
-    xbmc.log('X10-Light: *************************************************')
-    #END XBMC STOP Event
-    #Execute XBMC STOP Event settings on Device
-    
-    #MSwitch Device is off
-    ExecuteAction(DeviceApplication, DeviceURL, DeviceID, "OFF", "0")
+    if XBMCStopEventEnable=="true":
+        #START XBMC STOP Event
+        xbmc.log('X10-Light: ****************** STOP EVENT ******************')
+        ExecuteAction(DeviceApplication, DeviceURL, DeviceID, XBMCStopEvent, XBMCStopValue, XBMCStopFreeCmd)
+        xbmc.log('X10-Light: *************************************************')
+        #END XBMC STOP Event
+        #Execute XBMC STOP Event settings on Device
+
+    if XBMCStopEventEnable=="true":
+        #MSwitch Device is off
+        ExecuteAction(DeviceApplication, DeviceURL, DeviceID, "OFF", "0", "false")
 
 xbmc.log('X10-Light: *************************************************')

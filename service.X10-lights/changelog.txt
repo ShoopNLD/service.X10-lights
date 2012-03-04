@@ -1,3 +1,10 @@
+[B]0.0.6 alpha - 04MAR2012[/B]
+- Added: Enable/Disable of Events
+- Added: Free or predefinded commands per Event
+- Added: Switch King
+- Updated: [CORE] Selection function to handle Free commands
+- Updated: [CORE] Application functions to handle Free commands
+
 [B]0.0.5 - 25FEB2012[/B]
 - Solved: Issue 1, No more error message at startup when Add-on is not configured (Clean install)
 - Solved: Issue 2, Stop event is now working.
