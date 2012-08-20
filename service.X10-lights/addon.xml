@@ -9,7 +9,7 @@
 -->
 <addon id="service.X10-lights"
        name="X10 Commander Lights"
-       version="0.0.6"
+       version="0.0.6 beta"
        provider-name="Majestic Soft">
   <requires>
     <import addon="xbmc.python" version="1.0"/>
@@ -25,11 +25,15 @@
     - X10 Commander software from Melloware.
     - HomeSeer.
     - tenHsServer.
+    - Switch King.
+    - Thinking Home.
     </description>
     <description lang="nl">Bediend lampen tijdens het bekijken van een video, via een domotica server
     - X10 Commander software van Melloware.
     - HomeSeer.
     - tenHsServer.
+    - Switch King.
+    - Thinking Home.
     </description>
     <platform>all</platform>
   </extension>

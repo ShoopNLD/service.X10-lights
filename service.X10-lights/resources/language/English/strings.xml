@@ -3,32 +3,42 @@
     Document   : settings.xml
     Package    : X10 Commander Lights
     Author     : Majestic Soft
-    Copyright  : 2011, Majestic Soft, NL
+    Copyright  : 2012, Majestic Soft, NL
     License    : Gnu General Public License - see LICENSE.TXT
     Description: English language strings for X10 Commander Lights
 -->
 <strings>
     <!-- Addon Settings Categories -->
-    <string id="30500">Host</string>
-    <string id="30501">Devices</string>
-    <string id="30502">XBMC Events</string>
-    <string id="30503">Player Events</string>
-    <!-- Addon Settings -->
+    <string id="30500">Host settings</string>
+    <string id="30501">Device 01</string>
+    <string id="30502">Device 02</string>
+    <string id="30503">Device 03</string>
+    <string id="30504">Device 04</string>
+    <string id="30505">Device 05</string>
+    <!-- Addon Settings Host settings-->
     <string id="30000">Application IP address</string>
     <string id="30001">Application Port</string>
     <string id="30002">Application Security</string>
     <string id="30003">Application Username</string>
     <string id="30004">Application Password</string>
     <string id="30100">Device Application</string>
-    <string id="30101">Device ID</string>    
+    <!-- Addon Settings Device xx settings-->
+    <string id="30101">Device ID 01</string>
+    <string id="30102">Device ID 02</string> 
+    <string id="30103">Device ID 03</string> 
+    <string id="30104">Device ID 04</string> 
+    <string id="30105">Device ID 05</string>     
     <string id="30200">Action</string>
     <string id="30201">Percentage (%)</string>
     <string id="30202">Command</string>
     <string id="30203">Value</string>
-    <string id="30204">Start event</string>
-    <string id="30205">Stop event</string>
-    <string id="30206">Pause event</string>
-    <string id="30207">Resume event</string>
-    <string id="30208">End event</string>
+    <string id="30204">Player Start event</string>
+    <string id="30205">Player Stop event</string>
+    <string id="30206">Player Pause event</string>
+    <string id="30207">Player Resume event</string>
+    <string id="30208">Player End event</string>
     <string id="30209">Free definable Action</string>
+    <string id="30210">Device Active</string>
+    <string id="30211">XBMC Start event</string>
+    <string id="30212">XBMC Stop event</string>
 </strings>

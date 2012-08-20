@@ -3,15 +3,19 @@
     Document   : default.py
     Package    : X10 Commander Lights
     Author     : Majestic Soft
-    Copyright  : 2011, Majestic Soft, NL
+    Copyright  : 2012, Majestic Soft, NL
     License    : Gnu General Public License - see LICENSE.TXT
     Description: General control code for X10 Commander Lights
+    Revision   : 0.0.6 beta
+                 Added: Thinking Home (via webserver support)
     Revision   : 0.0.6 alpha
                  Added: Enable/Disable of Events
                  Added: Free or predefinded commands per Event
                  Added: Switch King
+                 Added: Username/password option
                  Updated: [CORE] Selection function to handle Free commands
                  Updated: [CORE] Application functions to handle Free commands
+                 Updated: [CORE] Multiple Device's (to maximum of five device's)
     Revision   : 0.0.5
                  Solved: Issue 1, No more error message at startup when Add-on is not configured (Clean install)
                  Solved: Issue 2, Stop event is now working.
@@ -51,7 +55,7 @@ def X10Commander(URL, ID, Action, Value, FreeCmd):
     #urllib2.urlopen(my_url + DeviceID + ' DIM ' + DevicePercentage + '"') = http://172.0.0.1:8086/?x10command=DEVICE~sendplc~"A1 BRIGHT 100"
     #these are with a plus, since the my_data needs to be concatenated with the url
     try:
-        if FreeCmd == "true":
+        if FreeCmd:
             ActionData = ID + ' ' + Action + ' '+ Value + '"'
             xbmc.log('X10-Light: X10-Commander, Action: ' + Action + ', with value: ' + Value + '.')
         else:
@@ -70,6 +74,7 @@ def X10Commander(URL, ID, Action, Value, FreeCmd):
             else:
                 xbmc.log('X10-Light: X10-Commander, No Action available!')
 
+        xbmc.log('X10-Light: X10-Commander, URL: ' + URL + ActionData)
         X10CommanderRequest = urllib2.urlopen(URL + ActionData)
         xbmc.log('X10-Light: Action Send to X10-Commander')
     except:
@@ -83,7 +88,7 @@ def HomeSeer(URL, ID, Action, Value, FreeCmd):
     #Example strings
     #urllib2.urlopen(my_url, my_data), this is with a comma, since the my_data needs to be encoded
     try:
-        if FreeCmd == "true":
+        if FreeCmd:
             ActionData = urllib.urlencode({'control_device':ID + '=' + Action + '=' + Value})
             xbmc.log('X10-Light: HomeSeer, Action: ' + Action + ', with value: ' + Value + '.')
         else:
@@ -103,6 +108,7 @@ def HomeSeer(URL, ID, Action, Value, FreeCmd):
                 xbmc.log('X10-Light: HomeSeer, No Action available!')
 
         HomeSeerRequest = urllib2.urlopen(URL, ActionData)
+        xbmc.log('X10-Light: HomeSeer, Request: ' + HomeSeerRequest)
         xbmc.log('X10-Light: Action Send to HomeSeer')
     except:
         xbmc.log('X10-Light: HomeSeer, XBMC ' + Action + ' Event Failed')
@@ -118,7 +124,7 @@ def tenHsServer(URL, ID, Action, Value, FreeCmd):
     #urllib2.urlopen('http://' + my_ip + ':' + my_port + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d=' + my_devid + '&a=' + my_xevstart + '&s=' + my_xevstartperc + '')
     #these are with a plus, since the my_data needs to be concatenated with the url
     try:
-        if FreeCmd == "true":
+        if FreeCmd:
             ActionData = ID + '&a=' + Action + '&s=' + Value + ''
             xbmc.log('X10-Light: tenHsServer, Action: ' + Action + ', with value: ' + Value + '.')
         else:
@@ -137,6 +143,7 @@ def tenHsServer(URL, ID, Action, Value, FreeCmd):
             else:
                 xbmc.log('X10-Light: tenHsServer, No Action available!')
 
+        xbmc.log('X10-Light: tenHsServer, URL: ' + URL + ActionData)
         X10CommanderRequest = urllib2.urlopen(URL + ActionData)
         xbmc.log('X10-Light: Action Send to tenHsServer')
     except:
@@ -152,29 +159,67 @@ def SwitchKing(URL, ID, Action, Value, FreeCmd):
     #http://servernamn:8800/devices/{id}/turnoff
     #http://servernamn:8800/devices/{id}/dim/{level}
     try:
-        if FreeCmd == "true":
-            ActionData = ID + '/' + Action + '/' + Value + ''
-            xbmc.log('X10-Light: SwitchKing, Action: ' + Action + ', with value: ' + Value + '.')
+        if FreeCmd:
+            ActionData = ID + '/' + Action + '/' + Value
+            xbmc.log('X10-Light: Switch King, Action: ' + Action + ', with value: ' + Value + '.')
         else:
             if Action == "ON":
                 ActionData = ID + '/turnon'
-                xbmc.log('X10-Light: SwitchKing, Switch lights or Device ON')
+                xbmc.log('X10-Light: Switch King, Switch lights or Device ON')
             elif Action == "OFF":
                 ActionData = ID + '/turnoff'
-                xbmc.log('X10-Light: SwitchKing, Switch lights or Device OFF')
+                xbmc.log('X10-Light: Switch King, Switch lights or Device OFF')
             elif Action == "BRIGHT":
                 ActionData = ID + '/bright/' + Value + ''
-                xbmc.log('X10-Light: SwitchKing, Brighten lights with ' + Value + '%')
+                xbmc.log('X10-Light: Switch King, Brighten lights with ' + Value + '%')
             elif Action == "DIM":
                 ActionData = ID + '/dim/' + Value + ''
-                xbmc.log('X10-Light: SwitchKing, Dim lights with ' + Value + '%')
+                xbmc.log('X10-Light: Switch King, Dim lights with ' + Value + '%')
             else:
-                xbmc.log('X10-Light: SwitchKing, No Action available!')
+                xbmc.log('X10-Light: Switch King, No Action available!')
 
+        xbmc.log('X10-Light: Switch King, URL: ' + URL + ActionData)
         X10CommanderRequest = urllib2.urlopen(URL + ActionData)
-        xbmc.log('X10-Light: Action Send to SwitchKing')
+        xbmc.log('X10-Light: Action Send to Switch King')
     except:
-        xbmc.log('X10-Light: SwitchKing, The ' + Action + ' Event Failed')
+        xbmc.log('X10-Light: Switch King, The ' + Action + ' Event Failed')
+    return
+
+# THINKING HOME FUNCTION 
+#This function Will execute the requested action in Thinking Home
+def ThinkingHome(URL, ID, Action, Value, FreeCmd):
+    #ThinkingHome STYLE
+    #Example strings
+    #http://servername:port/cgi-bin/thinkingHome-cgi?devName={id}&action=turnon
+    #http://servername:port/cgi-bin/thinkingHome-cgi?devName={id}&action=turnoff
+    #http://servername:port/cgi-bin/thinkingHome-cgi?devName={id}&action=dim&amount={value}
+    #http://servername:port/cgi-bin/thinkingHome-cgi?devName={id}&action=bright&amount={value}
+
+    try:
+        if FreeCmd:
+            ActionData = ID + '&action=' + Action + '&amount=' + Value
+            xbmc.log('X10-Light: Thinking Home, Action: ' + Action + ', with value: ' + Value + '.')
+        else:
+            if Action == "ON":
+                ActionData = ID + '&action=turnon'
+                xbmc.log('X10-Light: Thinking Home, Switch lights or Device ON')
+            elif Action == "OFF":
+                ActionData = ID + '&action=turnoff'
+                xbmc.log('X10-Light: Thinking Home, Switch lights or Device OFF')
+            elif Action == "BRIGHT":
+                ActionData = ID + '&action=bright&amount=' + Value
+                xbmc.log('X10-Light: Thinking Home, Brighten lights with ' + Value + '%')
+            elif Action == "DIM":
+                ActionData = ID + '&action=dim&amount=' + Value
+                xbmc.log('X10-Light: Thinking Home, Dim lights with ' + Value + '%')
+            else:
+                xbmc.log('X10-Light: Thinking Home, No Action available!')
+
+        xbmc.log('X10-Light: Thinking Home, URL: ' + URL + ActionData)
+        X10CommanderRequest = urllib2.urlopen(URL + ActionData)
+        xbmc.log('X10-Light: Action Send to Thinking Home')
+    except:
+        xbmc.log('X10-Light: Thinking Home, The ' + Action + ' Event Failed')
     return
 
 # EXECUTEACTION FUNCTION
@@ -190,6 +235,8 @@ def ExecuteAction(Application, URL, ID, Action, Value, FreeCmd):
         tenHsServer(URL, ID, Action, Value, FreeCmd)
     elif Application == "SWITCHKING":
         SwitchKing(URL, ID, Action, Value, FreeCmd)
+    elif Application == "THINKINGHOME":
+        ThinkingHome(URL, ID, Action, Value, FreeCmd)
     else:
         xbmc.log('X10-Light: An unknown Device Aplication is selected!')
     return
@@ -230,102 +277,115 @@ xbmc.log('X10-Light: Addon information is read and shown in log file')
 
 # ADDON DEVICE APPLICATION AND URL SETTING
 # 'http://' + my_ip + ':' + my_port + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d=' + my_devid + '&a=ON'
+# User:Pass@
 
 if __addon__.getSetting("DEVAPP") == "0":
     DeviceApplication = "X10-COMMANDER"
-    DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/?x10command=DEVICE~sendplc~"'
+    if (str(__addon__.getSetting("SECURITY")) == "true"):
+        DeviceURL = 'http://' + __addon__.getSetting("USER") + ':' + __addon__.getSetting("PASS") + '@' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/?x10command=DEVICE~sendplc~"'
+    else:
+        DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/?x10command=DEVICE~sendplc~"'
 elif __addon__.getSetting("DEVAPP") == "1":
+    #Security unkown
     DeviceApplication = "HOMESEER"
     DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/tail.htm'
 elif __addon__.getSetting("DEVAPP") == "2":
     DeviceApplication = "TENHSSERVER"
-    DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d='
+    if (str(__addon__.getSetting("SECURITY")) == "true"):
+        DeviceURL = 'http://' + __addon__.getSetting("USER") + ':' + __addon__.getSetting("PASS") + '@' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d='
+    else:
+        DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d='
 elif __addon__.getSetting("DEVAPP") == "3":
     DeviceApplication = "SWITCHKING"
-    DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/devices/'
+    if (str(__addon__.getSetting("SECURITY")) == "true"):
+        DeviceURL = 'http://' + __addon__.getSetting("USER") + ':' + __addon__.getSetting("PASS") + '@' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/devices/'
+    else:
+        DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/devices/'
+elif __addon__.getSetting("DEVAPP") == "4":
+    DeviceApplication = "THINKINGHOME"
+    if (str(__addon__.getSetting("SECURITY")) == "true"):
+        DeviceURL = 'http://' + __addon__.getSetting("USER") + ':' + __addon__.getSetting("PASS") + '@' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/cgi-bin/thinkingHome-cgi?devName='
+    else:
+        DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/cgi-bin/thinkingHome-cgi?devName='
 else:
     DeviceApplication = "UNKOWN"
 
+xbmc.log('X10-Light: Security: ' + str(__addon__.getSetting("SECURITY")))
+xbmc.log('X10-Light: Base URL: ' + DeviceURL)
+
 # ADDON DEVICE SETTINGS
-DeviceID = __addon__.getSetting("DEVID")
+DeviceID = __addon__.getSetting("DEVID01")
 
 # ADDON EVENT SETTINGS
-
-
 # ADDON XBMC AND PLAYER EVENT SETTINGS (depening on Free definable Action command's = 1 or Fixed Action command's = 0)
 # with Free definable Action command's, the user has to type his own commands, and if needed his own value's
 # with Fixed Action command's, the user has can select the appropriate action (ON/OFF/DIM/BRIGHT), and if need fill out a percentage.
 #XBMC
-XBMCStartEventEnable = __addon__.getSetting("XEVSTARTENABLE")
-if __addon__.getSetting("XEVSTARTFREE") == "true":    
-    XBMCStartEvent = __addon__.getSetting("XEVSTARTCMD")
-    XBMCStartValue = __addon__.getSetting("XEVSTARTVAL")
-    XBMCStartFreeCmd = "true"
+xbmc.log('X10-Light: StartEventEnable: ' + __addon__.getSetting("XEVSTARTENABLE01"))
+xbmc.log('X10-Light: StartFree: ' + __addon__.getSetting("XEVSTARTFREE01"))
+XBMCStartEventEnable = __addon__.getSetting("XEVSTARTENABLE01")
+XBMCStartFreeCmd = __addon__.getSetting("XEVSTARTFREE01")
+if __addon__.getSetting("XEVSTARTFREE01"):
+    XBMCStartEvent = __addon__.getSetting("XEVSTARTCMD01")
+    XBMCStartValue = __addon__.getSetting("XEVSTARTVAL01")
 else:
-    XBMCStartEvent = EventAction(__addon__.getSetting("XEVSTART"))
-    XBMCStartValue = __addon__.getSetting("XEVSTARTPERC")
-    XBMCStartFreeCmd = "false"
+    XBMCStartEvent = EventAction(__addon__.getSetting("XEVSTART01"))
+    XBMCStartValue = __addon__.getSetting("XEVSTARTPERC01")
 
-XBMCStopEventEnable = __addon__.getSetting("XEVSTOPENABLE")
-if __addon__.getSetting("XEVSTOPFREE") == "true":    
-    XBMCStopEvent = __addon__.getSetting("XEVSTOPCMD")
-    XBMCStopValue = __addon__.getSetting("XEVSTOPVAL")
-    XBMCStopFreeCmd = "true"
+XBMCStopEventEnable = __addon__.getSetting("XEVSTOPENABLE01")
+XBMCStopFreeCmd = __addon__.getSetting("XEVSTOPFREE01")
+if __addon__.getSetting("XEVSTOPFREE01"):
+    XBMCStopEvent = __addon__.getSetting("XEVSTOPCMD01")
+    XBMCStopValue = __addon__.getSetting("XEVSTOPVAL01")
 else:
-    XBMCStopEvent = EventAction(__addon__.getSetting("XEVSTOP"))
-    XBMCStopValue = __addon__.getSetting("XEVSTOPPERC")
-    XBMCStopFreeCmd = "false"
+    XBMCStopEvent = EventAction(__addon__.getSetting("XEVSTOP01"))
+    XBMCStopValue = __addon__.getSetting("XEVSTOPPERC01")
 
 #PLAYER
-PLAYERStartEventEnable = __addon__.getSetting("PEVSTARTENABLE")
-if __addon__.getSetting("PEVSTARTFREE") == "true":
-    PLAYERStartEvent = __addon__.getSetting("PEVSTARTCMD")
-    PLAYERStartValue = __addon__.getSetting("PEVSTARTVAL")
-    PLAYERStartFreeCmd = "true"
+PLAYERStartEventEnable = __addon__.getSetting("PEVSTARTENABLE01")
+PLAYERStartFreeCmd = __addon__.getSetting("PEVSTARTFREE01")
+if __addon__.getSetting("PEVSTARTFREE01"):
+    PLAYERStartEvent = __addon__.getSetting("PEVSTARTCMD01")
+    PLAYERStartValue = __addon__.getSetting("PEVSTARTVAL01")
 else:
-    PLAYERStartEvent = EventAction(__addon__.getSetting("PEVSTART"))
-    PLAYERStartValue = __addon__.getSetting("PEVSTARTPERC")
-    PLAYERStartFreeCmd = "false"
+    PLAYERStartEvent = EventAction(__addon__.getSetting("PEVSTART01"))
+    PLAYERStartValue = __addon__.getSetting("PEVSTARTPERC01")
 
-PLAYERStopEventEnable = __addon__.getSetting("PEVSTOPENABLE")
-if __addon__.getSetting("PEVSTOPFREE") == "true": 
-    PLAYERStopEvent = __addon__.getSetting("PEVSTOPCMD")
-    PLAYERStopValue = __addon__.getSetting("PEVSTOPVAL")
-    PLAYERStopFreeCmd = "true"
+PLAYERStopEventEnable = __addon__.getSetting("PEVSTOPENABLE01")
+PLAYERStopFreeCmd = __addon__.getSetting("PEVSTOPFREE01")
+if __addon__.getSetting("PEVSTOPFREE01"): 
+    PLAYERStopEvent = __addon__.getSetting("PEVSTOPCMD01")
+    PLAYERStopValue = __addon__.getSetting("PEVSTOPVAL01")
 else:
-    PLAYERStopEvent = EventAction(__addon__.getSetting("PEVSTOP"))
-    PLAYERStopValue = __addon__.getSetting("PEVSTOPPERC")
-    PLAYERStopFreeCmd = "false"
+    PLAYERStopEvent = EventAction(__addon__.getSetting("PEVSTOP01"))
+    PLAYERStopValue = __addon__.getSetting("PEVSTOPPERC01")
 
-PLAYERPauseEventEnable = __addon__.getSetting("PEVPAUSEENABLE")
-if __addon__.getSetting("PEVPAUSEFREE") == "true": 
-    PLAYERPauseEvent = __addon__.getSetting("PEVPAUSECMD")
-    PLAYERPauseValue = __addon__.getSetting("PEVPAUSEVAL")
-    PLAYERPauseFreeCmd = "true"
+PLAYERPauseEventEnable = __addon__.getSetting("PEVPAUSEENABLE01")
+PLAYERPauseFreeCmd = __addon__.getSetting("PEVPAUSEFREE01")
+if __addon__.getSetting("PEVPAUSEFREE01"): 
+    PLAYERPauseEvent = __addon__.getSetting("PEVPAUSECMD01")
+    PLAYERPauseValue = __addon__.getSetting("PEVPAUSEVAL01")
 else:
-    PLAYERPauseEvent = EventAction(__addon__.getSetting("PEVPAUSE"))
-    PLAYERPauseValue = __addon__.getSetting("PEVPAUSEPERC")
-    PLAYERPauseFreeCmd = "false"
+    PLAYERPauseEvent = EventAction(__addon__.getSetting("PEVPAUSE01"))
+    PLAYERPauseValue = __addon__.getSetting("PEVPAUSEPERC01")
 
-PLAYERResumeEventEnable = __addon__.getSetting("PEVRESUMEENABLE")
-if __addon__.getSetting("PEVPAUSEFREE") == "true": 
-    PLAYERResumeEvent = __addon__.getSetting("PEVRESUMECMD")
-    PLAYERResumeValue = __addon__.getSetting("PEVRESUMEVAL")
-    PLAYERResumeFreeCmd = "true"
+PLAYERResumeEventEnable = __addon__.getSetting("PEVRESUMEENABLE01")
+PLAYERResumeFreeCmd = __addon__.getSetting("PEVPAUSEFREE01")
+if __addon__.getSetting("PEVPAUSEFREE01"): 
+    PLAYERResumeEvent = __addon__.getSetting("PEVRESUMECMD01")
+    PLAYERResumeValue = __addon__.getSetting("PEVRESUMEVAL01")
 else:
-    PLAYERResumeEvent = EventAction(__addon__.getSetting("PEVRESUME"))
-    PLAYERResumeValue = __addon__.getSetting("PEVRESUMEPERC")
-    PLAYERResumeFreeCmd = "false"
+    PLAYERResumeEvent = EventAction(__addon__.getSetting("PEVRESUME01"))
+    PLAYERResumeValue = __addon__.getSetting("PEVRESUMEPERC01")
 
-PLAYEREndEventEnable = __addon__.getSetting("PEVENDENABLE")
-if __addon__.getSetting("PEVPAUSEFREE") == "true": 
-    PLAYEREndEvent = __addon__.getSetting("PEVENDCMD")
-    PLAYEREndValue = __addon__.getSetting("PEVENDVAL")
-    PLAYEREndFreeCmd = "true"
+PLAYEREndEventEnable = __addon__.getSetting("PEVENDENABLE01")
+PLAYEREndFreeCmd = __addon__.getSetting("PEVPAUSEFREE01")
+if __addon__.getSetting("PEVPAUSEFREE01"): 
+    PLAYEREndEvent = __addon__.getSetting("PEVENDCMD01")
+    PLAYEREndValue = __addon__.getSetting("PEVENDVAL01")
 else:
-    PLAYEREndEvent = EventAction(__addon__.getSetting("PEVEND"))
-    PLAYEREndValue = __addon__.getSetting("PEVENDPERC")
-    PLAYEREndFreeCmd = "false"
+    PLAYEREndEvent = EventAction(__addon__.getSetting("PEVEND01"))
+    PLAYEREndValue = __addon__.getSetting("PEVENDPERC01")
 
 # ADDON SHOW INFORMATION ABOUT ALL SETTINGS
 xbmc.log('X10-Light: *************** Addon Host settings *************')

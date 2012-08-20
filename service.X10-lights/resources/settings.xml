@@ -11,55 +11,101 @@
     <category label="30500">
         <setting id="IP" label="30000" type="ipaddress" default="127.0.0.1"/>
         <setting id="PORT" label="30001" type="text" default="8086"/>
+        <setting id="SECURITY" label="30002" type="bool" default="false"/>
+        <setting id="USER" label="30003" type="text" visible="eq(-1,true)" default="username"/>
+        <setting id="PASS" label="30004" type="text" visible="eq(-2,true)" default="password" option="hidden"/>
+        <setting id="DEVAPP" label="30100" type="enum" values="X10 Commander|HomeSeer|tenHsServer|Switch King|Thinking Home" default="0"/>
     </category>
     <category label="30501">
-        <setting id="DEVAPP" label="30100" type="enum" values="X10 Commander|HomeSeer|tenHsServer|Switch King" default="0"/>
-        <setting id="DEVID" label="30101" type="text" default="A1"/>
+        <setting id="DEVID01ENABLE" label="30210" type="bool" default="true"/>
+        <setting id="DEVID01" label="30101" type="text" visible="eq(-1,true)" default="A1"/>
+        <setting id="XEVSTARTENABLE01" label="30211" type="bool" default="false"/>
+        <setting id="XEVSTARTFREE01" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
+        <setting id="XEVSTART01" label="30200" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
+        <setting id="XEVSTARTPERC01" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
+        <setting id="XEVSTARTCMD01" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
+        <setting id="XEVSTARTVAL01" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
+        <setting id="XEVSTOPENABLE01" type="bool" label="30212" default="false"/>
+        <setting id="XEVSTOPFREE01" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
+        <setting id="XEVSTOP01" label="30201" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
+        <setting id="XEVSTOPPERC01" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
+        <setting id="XEVSTOPCMD01" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
+        <setting id="XEVSTOPVAL01" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
+        <setting id="PEVSTARTENABLE01" label="30204" type="bool" default="false"/>
+        <setting id="PEVSTARTFREE01" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
+        <setting id="PEVSTART01" label="30200" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
+        <setting id="PEVSTARTPERC01" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
+        <setting id="PEVSTARTCMD01" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
+        <setting id="PEVSTARTVAL01" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
+        <setting id="PEVSTOPENABLE01" type="bool" label="30205" default="false"/>
+        <setting id="PEVSTOPFREE01" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
+        <setting id="PEVSTOP01" label="30201" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
+        <setting id="PEVSTOPPERC01" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
+        <setting id="PEVSTOPCMD01" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
+        <setting id="PEVSTOPVAL01" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
+        <setting id="PEVPAUSEENABLE01" type="bool" label="30206" default="false"/>
+        <setting id="PEVPAUSEFREE01" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
+        <setting id="PEVPAUSE01" label="30201" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
+        <setting id="PEVPAUSEPERC01" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
+        <setting id="PEVPAUSECMD01" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
+        <setting id="PEVPAUSEVAL01" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
+        <setting id="PEVRESUMEENABLE01" type="bool" label="30207" default="false"/>
+        <setting id="PEVRESUMEFREE01" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
+        <setting id="PEVRESUME01" label="30201" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
+        <setting id="PEVRESUMEPERC01" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
+        <setting id="PEVRESUMECMD01" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
+        <setting id="PEVRESUMEVAL01" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
+        <setting id="PEVENDENABLE01" type="bool" label="30208" default="false"/>
+        <setting id="PEVENDFREE01" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
+        <setting id="PEVEND01" label="30201" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
+        <setting id="PEVENDPERC01" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
+        <setting id="PEVENDCMD01" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
+        <setting id="PEVENDVAL01" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
     </category>
     <category label="30502">
-        <setting id="XEVSTARTENABLE" label="30204" type="bool" default="false"/>
-        <setting id="XEVSTARTFREE" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
-        <setting id="XEVSTART" label="30200" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
-        <setting id="XEVSTARTPERC" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
-        <setting id="XEVSTARTCMD" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
-        <setting id="XEVSTARTVAL" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
-        <setting id="XEVSTOPENABLE" type="bool" label="30205" default="false"/>
-        <setting id="XEVSTOPFREE" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
-        <setting id="XEVSTOP" label="30201" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
-        <setting id="XEVSTOPPERC" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
-        <setting id="XEVSTOPCMD" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
-        <setting id="XEVSTOPVAL" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
-    </category>
-    <category label="30503">
-        <setting id="PEVSTARTENABLE" label="30204" type="bool" default="false"/>
-        <setting id="PEVSTARTFREE" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
-        <setting id="PEVSTART" label="30200" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
-        <setting id="PEVSTARTPERC" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
-        <setting id="PEVSTARTCMD" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
-        <setting id="PEVSTARTVAL" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
-        <setting id="PEVSTOPENABLE" type="bool" label="30205" default="false"/>
-        <setting id="PEVSTOPFREE" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
-        <setting id="PEVSTOP" label="30201" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
-        <setting id="PEVSTOPPERC" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
-        <setting id="PEVSTOPCMD" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
-        <setting id="PEVSTOPVAL" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
-        <setting id="PEVPAUSEENABLE" type="bool" label="30206" default="false"/>
-        <setting id="PEVPAUSEFREE" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
-        <setting id="PEVPAUSE" label="30201" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
-        <setting id="PEVPAUSEPERC" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
-        <setting id="PEVPAUSECMD" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
-        <setting id="PEVPAUSEVAL" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
-        <setting id="PEVRESUMEENABLE" type="bool" label="30207" default="false"/>
-        <setting id="PEVRESUMEFREE" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
-        <setting id="PEVRESUME" label="30201" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
-        <setting id="PEVRESUMEPERC" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
-        <setting id="PEVRESUMECMD" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
-        <setting id="PEVRESUMEVAL" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
-        <setting id="PEVENDENABLE" type="bool" label="30208" default="false"/>
-        <setting id="PEVENDFREE" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
-        <setting id="PEVEND" label="30201" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
-        <setting id="PEVENDPERC" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
-        <setting id="PEVENDCMD" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
-        <setting id="PEVENDVAL" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
+        <setting id="DEVID02ENABLE" label="30210" type="bool" default="false"/>
+        <setting id="DEVID02" label="30102" type="text" visible="eq(-1,true)" default="A2"/>
+        <setting id="XEVSTARTENABLE02" label="30211" type="bool" default="false"/>
+        <setting id="XEVSTARTFREE02" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
+        <setting id="XEVSTART02" label="30200" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
+        <setting id="XEVSTARTPERC02" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
+        <setting id="XEVSTARTCMD02" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
+        <setting id="XEVSTARTVAL02" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
+        <setting id="XEVSTOPENABLE02" type="bool" label="30212" default="false"/>
+        <setting id="XEVSTOPFREE02" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
+        <setting id="XEVSTOP02" label="30201" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
+        <setting id="XEVSTOPPERC02" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
+        <setting id="XEVSTOPCMD02" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
+        <setting id="XEVSTOPVAL02" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
+        <setting id="PEVSTARTENABLE02" label="30204" type="bool" default="false"/>
+        <setting id="PEVSTARTFREE02" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
+        <setting id="PEVSTART02" label="30200" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
+        <setting id="PEVSTARTPERC02" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
+        <setting id="PEVSTARTCMD02" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
+        <setting id="PEVSTARTVAL02" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
+        <setting id="PEVSTOPENABLE02" type="bool" label="30205" default="false"/>
+        <setting id="PEVSTOPFREE02" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
+        <setting id="PEVSTOP02" label="30201" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
+        <setting id="PEVSTOPPERC02" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
+        <setting id="PEVSTOPCMD02" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
+        <setting id="PEVSTOPVAL02" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
+        <setting id="PEVPAUSEENABLE02" type="bool" label="30206" default="false"/>
+        <setting id="PEVPAUSEFREE02" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
+        <setting id="PEVPAUSE02" label="30201" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
+        <setting id="PEVPAUSEPERC02" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
+        <setting id="PEVPAUSECMD02" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
+        <setting id="PEVPAUSEVAL02" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
+        <setting id="PEVRESUMEENABLE02" type="bool" label="30207" default="false"/>
+        <setting id="PEVRESUMEFREE02" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
+        <setting id="PEVRESUME02" label="30201" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
+        <setting id="PEVRESUMEPERC02" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
+        <setting id="PEVRESUMECMD02" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
+        <setting id="PEVRESUMEVAL02" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
+        <setting id="PEVENDENABLE02" type="bool" label="30208" default="false"/>
+        <setting id="PEVENDFREE02" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
+        <setting id="PEVEND02" label="30201" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
+        <setting id="PEVENDPERC02" label="30201" type="text" visible="eq(-3,true)+gt(-1,-1)+lt(-1,2)+eq(-2,false)" subsetting="true" default="50"/>
+        <setting id="PEVENDCMD02" label="30202" subsetting = "true" type="text" visible="eq(-4,true)+eq(-3,true)" default="CMD" />
+        <setting id="PEVENDVAL02" label="30203" subsetting = "true" type="text" visible="eq(-5,true)+eq(-4,true)" default="off"/>
     </category>
 </settings>
