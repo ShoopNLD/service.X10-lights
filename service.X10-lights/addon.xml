@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!--
     Document   : addon.xml
-    Package    : X10 Commander Lights
+    Package    : X10 - Lights (Domotica Commander)
     Author     : Majestic Soft
-    Copyright  : 2011, Majestic Soft, NL
+    Copyright  : 2012, Majestic Soft, NL
     License    : Gnu General Public License - see LICENSE.TXT
-    Description: Addon details for X10 Commander Lights
+    Description: Addon details for X10 - Lights (Domotica Commander)
 -->
 <addon id="service.X10-lights"
-       name="X10 Commander Lights"
-       version="0.0.6 beta"
+       name="X10 - Lights (Domotica Commander)"
+       version="1.0.0"
        provider-name="Majestic Soft">
   <requires>
     <import addon="xbmc.python" version="1.0"/>
@@ -19,21 +19,23 @@
         <provides>service</provides>
   </extension>
   <extension point="xbmc.addon.metadata">
-    <summary>X10 Commander Lights</summary>
-    <summary lang="nl">X10 Commander Lampen</summary>
-    <description>Controls lights during watching of a video, via a domotica server:
+    <summary>X10 - Lights (Domotica Commander)</summary>
+    <summary lang="nl">X10 - Lampen (Domotica Commandant)</summary>
+    <description>Controls multiple lights (devices) during watching of a video, via a domotica server:
     - X10 Commander software from Melloware.
     - HomeSeer.
     - tenHsServer.
     - Switch King.
     - Thinking Home.
+    - HomeWizard.
     </description>
-    <description lang="nl">Bediend lampen tijdens het bekijken van een video, via een domotica server
+    <description lang="nl">Bediend meerdere lampen (aparaten) tijdens het bekijken van een video, via een domotica server
     - X10 Commander software van Melloware.
     - HomeSeer.
     - tenHsServer.
     - Switch King.
     - Thinking Home.
+    - HomeWizard.
     </description>
     <platform>all</platform>
   </extension>

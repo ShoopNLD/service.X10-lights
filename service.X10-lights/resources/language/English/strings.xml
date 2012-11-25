@@ -21,6 +21,7 @@
     <string id="30002">Application Security</string>
     <string id="30003">Application Username</string>
     <string id="30004">Application Password</string>
+    <string id="30005">Application Debugging</string>
     <string id="30100">Device Application</string>
     <!-- Addon Settings Device xx settings-->
     <string id="30101">Device ID 01</string>

@@ -16,11 +16,12 @@
     <string id="30504">Device 04</string>
     <string id="30505">Device 05</string>
     <!-- Addon Settings Host settings-->
-    <string id="30000">Application IP adres</string>
-    <string id="30001">Application Port</string>
-    <string id="30002">Application Security</string>
-    <string id="30003">Application Gebruikersnaam</string>
-    <string id="30004">Application Wachtwoord</string>
+    <string id="30000">Applicatie IP adres</string>
+    <string id="30001">Applicatie Port</string>
+    <string id="30002">Applicatie Security</string>
+    <string id="30003">Applicatie Gebruikersnaam</string>
+    <string id="30004">Applicatie Wachtwoord</string>
+    <string id="30005">Applicatie Debugging</string>
     <string id="30100">Device Applicatie</string>
     <!-- Addon Settings Device xx settings-->
     <string id="30101">Device ID 01</string>
