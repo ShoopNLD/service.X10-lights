@@ -1,3 +1,6 @@
+[B]1.0.1 - 08MAY2013[/B]
+- Changed: [CORE] X10-commander send calls
+
 [B]1.0.0 - 25NOV2012[/B]
 - Added: Thinking Home (via webserver support)
 - Added: HomeWizard. 

@@ -3,9 +3,11 @@
     Document   : default.py
     Package    : X10 - Lights (Domotica Commander)
     Author     : Majestic Soft
-    Copyright  : 2012, Majestic Soft, NL
+    Copyright  : 2013, Majestic Soft, NL
     License    : Gnu General Public License - see LICENSE.TXT
     Description: General control code for X10 - Lights (Domotica Commander)
+    Revision   : 1.0.1 
+                 Changed: [CORE] X10-commander send calls
     Revision   : 1.0.0 
                  Added: Thinking Home (via webserver support)
                  Added: HomeWizard
