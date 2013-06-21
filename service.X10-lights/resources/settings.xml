@@ -14,7 +14,7 @@
         <setting id="SECURITY" label="30002" type="bool" default="false"/>
         <setting id="USER" label="30003" type="text" visible="eq(-1,true)" default="username"/>
         <setting id="PASS" label="30004" type="text" visible="eq(-2,true)" default="password" option="hidden"/>
-        <setting id="DEVAPP" label="30100" type="enum" values="X10 Commander|HomeSeer|tenHsServer|Switch King|Thinking Home|HomeWizard" default="0"/>
+        <setting id="DEVAPP" label="30100" type="enum" values="X10 Commander|HomeSeer|tenHsServer|Switch King|Thinking Home|HomeWizard|Domoticz" default="0"/>
         <setting id="DEBUGLOG" label="30005" type="bool" default="false"/>
     </category>
     <category label="30501">

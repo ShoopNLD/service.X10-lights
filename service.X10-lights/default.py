@@ -7,7 +7,10 @@
     License    : Gnu General Public License - see LICENSE.TXT
     Description: General control code for X10 - Lights (Domotica Commander)
     Revision   : 1.0.1 
-                 Changed: [CORE] X10-commander send calls
+                 Added: Domoticz.
+                 Fixed: bug in HomeWizard call.
+                 Updated: zip file structure to support the import from zip file option in xbmc
+                 Updated: The Manual
     Revision   : 1.0.0 
                  Added: Thinking Home (via webserver support)
                  Added: HomeWizard
@@ -306,6 +309,47 @@ def HomeWizard(URL, ID, Action, Value, FreeCmd):
         ReturnValue = "fail"
     return ReturnValue
 
+# DOMOTICZ FUNCTION 
+#This function Will execute the requested action in HomeSeer via tenHsServer
+def Domoticz(URL, ID, Action, Value, FreeCmd):
+    #Domoticz STYLE
+    #Example strings
+    #urllib2.urlopen('http://' + my_ip + ':' + my_port + '/json.htm?type=command&param=switchlight&idx=' + my_devid + '&switchcmd=On&level=0')
+    #urllib2.urlopen('http://' + my_ip + ':' + my_port + '/json.htm?type=command&param=switchlight&idx=' + my_devid + '&switchcmd=Off&level=0')
+    #http://192.168.1.37:8080/json.htm?type=command&param=switchlight&idx=5&switchcmd=On&level=0
+    #http://192.168.1.37:8080/json.htm?type=command&param=switchlight&idx=5&switchcmd=Off&level=0
+    
+    #these are with a plus, since the my_data needs to be concatenated with the url
+    try:
+        if FreeCmd:
+            ActionData = ID + '&a=' + Action + '&s=' + Value + ''
+            if (debuging): xbmc.log('X10-Lights: Domoticz, Action: ' + Action + ', with value: ' + Value + '.')
+        else:
+            if Action == "ON":
+                ActionData = ID + '&switchcmd=On&level=0'
+                if (debuging): xbmc.log('X10-Lights: Domoticz, Switch lights or Device ON')
+            elif Action == "OFF":
+                ActionData = ID + '&switchcmd=Off&level=0'
+                if (debuging): xbmc.log('X10-Lights: Domoticz, Switch lights or Device OFF')
+            elif Action == "BRIGHT":
+                ActionData = ID + '&switchcmd=On&level=' + Value + ''
+                if (debuging): xbmc.log('X10-Lights: Domoticz, Brighten lights with ' + Value + '%')
+            elif Action == "DIM":
+                ActionData = ID + '&switchcmd=Off&level=' + Value + ''
+                if (debuging): xbmc.log('X10-Lights: Domoticz, Dim lights with ' + Value + '%')
+            else:
+                if (debuging): xbmc.log('X10-Lights: Domoticz, No Action available!')
+
+        if (debuging): xbmc.log('X10-Lights: Domoticz, URL: ' + URL + ActionData)
+        X10CommanderRequest = urllib2.urlopen(URL + ActionData)
+        if (debuging): xbmc.log('X10-Lights: Action Send to Domoticz')
+        ReturnValue = "success"
+    except:
+        if (debuging): xbmc.log('X10-Lights: Domoticz, The ' + Action + ' Event Failed')
+        ReturnValue = "fail"
+    return ReturnValue
+
+
 # EXECUTEACTION FUNCTION
 def ExecuteAction(Application, URL, ID, Action, Value, FreeCmd):
     #This function is a simple selector 
@@ -323,6 +367,8 @@ def ExecuteAction(Application, URL, ID, Action, Value, FreeCmd):
         ReturnValue = ThinkingHome(URL, ID, Action, Value, FreeCmd)
     elif Application == "HOMEWIZARD":
         ReturnValue = HomeWizard(URL, ID, Action, Value, FreeCmd)
+    elif Application == "DOMOTICZ":
+        ReturnValue = Domoticz(URL, ID, Action, Value, FreeCmd)
     else:
         if (debuging): xbmc.log('X10-Lights: An unknown Device Aplication is selected!')
         ReturnValue = "failed"
@@ -633,12 +679,18 @@ elif __addon__.getSetting("DEVAPP") == "4":
     else:
         DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/cgi-bin/thinkingHome-cgi?devName='
 elif __addon__.getSetting("DEVAPP") == "5":
-    DeviceApplication = "HOMEWIZZARD" 
+    DeviceApplication = "HOMEWIZARD" 
     #REMARK HomeWizard always needs a password (but not a username)  -  http://<ip>/<password>/  -  "http://" + ipadres + ":" + port + "/" + password;
     if (str(__addon__.getSetting("SECURITY")) == "true"):
         DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") +  '/' + __addon__.getSetting("PASS")
     else:
         DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT")  +  '/'
+elif __addon__.getSetting("DEVAPP") == "6":
+    DeviceApplication = "DOMOTICZ" 
+    if (str(__addon__.getSetting("SECURITY")) == "true"):
+        DeviceURL = 'http://' + __addon__.getSetting("USER") + ':' + __addon__.getSetting("PASS") + '@' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/json.htm?type=command&param=switchlight&idx='
+    else:
+        DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/json.htm?type=command&param=switchlight&idx='
 else:
     DeviceApplication = "UNKOWN"
 

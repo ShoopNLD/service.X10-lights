@@ -1,5 +1,8 @@
-[B]1.0.1 - 08MAY2013[/B]
-- Changed: [CORE] X10-commander send calls
+[B]1.0.1 - 21JUN2013[/B]
+- Added: Domoticz.
+- Fixed: HomeWizard.
+- Updated: zip file structure to support the import from zip file option in xbmc
+- Updated: The Manual
 
 [B]1.0.0 - 25NOV2012[/B]
 - Added: Thinking Home (via webserver support)

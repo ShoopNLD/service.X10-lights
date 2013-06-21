@@ -3,13 +3,13 @@
     Document   : addon.xml
     Package    : X10 - Lights (Domotica Commander)
     Author     : Majestic Soft
-    Copyright  : 2012, Majestic Soft, NL
+    Copyright  : 2013, Majestic Soft, NL
     License    : Gnu General Public License - see LICENSE.TXT
     Description: Addon details for X10 - Lights (Domotica Commander)
 -->
 <addon id="service.X10-lights"
        name="X10 - Lights (Domotica Commander)"
-       version="1.0.0"
+       version="1.0.1"
        provider-name="Majestic Soft">
   <requires>
     <import addon="xbmc.python" version="1.0"/>
@@ -28,6 +28,7 @@
     - Switch King.
     - Thinking Home.
     - HomeWizard.
+    - Domoticz.
     </description>
     <description lang="nl">Bediend meerdere lampen (aparaten) tijdens het bekijken van een video, via een domotica server
     - X10 Commander software van Melloware.
@@ -36,6 +37,7 @@
     - Switch King.
     - Thinking Home.
     - HomeWizard.
+    - Domoticz.
     </description>
     <platform>all</platform>
   </extension>
