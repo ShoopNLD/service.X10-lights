@@ -1,3 +1,7 @@
+[B]1.0.2 - 26JAN2014[/B]
+- Added: HomeGenie (made by Mack).
+- Fixed: Language issue in addon.xml
+
 [B]1.0.1 - 21JUN2013[/B]
 - Added: Domoticz.
 - Fixed: HomeWizard.

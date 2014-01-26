@@ -3,9 +3,12 @@
     Document   : default.py
     Package    : X10 - Lights (Domotica Commander)
     Author     : Majestic Soft
-    Copyright  : 2013, Majestic Soft, NL
+    Copyright  : 2014, Majestic Soft, NL
     License    : Gnu General Public License - see LICENSE.TXT
     Description: General control code for X10 - Lights (Domotica Commander)
+    Revision   : 1.0.2 
+                 Added: HomeGenie (made by Mack).
+                 Fixed: Language issue in addon.xml
     Revision   : 1.0.1 
                  Added: Domoticz.
                  Fixed: bug in HomeWizard call.
@@ -349,6 +352,42 @@ def Domoticz(URL, ID, Action, Value, FreeCmd):
         ReturnValue = "fail"
     return ReturnValue
 
+# HomeGenie FUNCTION 
+#This function Will execute the requested action in HomeGenie
+def HomeGenie(URL, ID, Action, Value, FreeCmd):
+    #HomeGenie STYLE
+    #Example strings
+    #http://servername:port/api/HomeAutomation.X10/{id}/Control.On
+    #http://servername:port/api/HomeAutomation.X10/{id}/Control.Off
+    #http://servername:port/api/HomeAutomation.X10/{id}/Control.Dim
+    try:
+        if FreeCmd:
+            ActionData = ID + '/Control.' + Action + '/' + Value
+            if (debuging): xbmc.log('X10-Lights: HomeGenie, Action: ' + Action + ', with value: ' + Value + '.')
+        else:
+            if Action == "ON":
+                ActionData = ID + '/Control.On'
+                if (debuging): xbmc.log('X10-Lights: HomeGenie, Switch lights or Device ON')
+            elif Action == "OFF":
+                ActionData = ID + '/Control.Off'
+                if (debuging): xbmc.log('X10-Lights: HomeGenie, Switch lights or Device OFF')
+            elif Action == "BRIGHT":
+                ActionData = ID + '/Control.Bright/' + Value + ''
+                if (debuging): xbmc.log('X10-Lights: HomeGenie, Brighten lights with ' + Value + '%')
+            elif Action == "DIM":
+                ActionData = ID + '/Control.Dim/' + Value + ''
+                if (debuging): xbmc.log('X10-Lights: HomeGenie, Dim lights with ' + Value + '%')
+            else:
+                if (debuging): xbmc.log('X10-Lights: HomeGenie, No Action available!')
+
+        if (debuging): xbmc.log('X10-Lights: HomeGenie, URL: ' + URL + ActionData)
+        X10CommanderRequest = urllib2.urlopen(URL + ActionData)
+        if (debuging): xbmc.log('X10-Lights: Action Send to HomeGenie')
+        ReturnValue = "success"
+    except:
+        if (debuging): xbmc.log('X10-Lights: HomeGenie, The ' + Action + ' Event Failed')
+        ReturnValue = "fail"
+    return ReturnValue
 
 # EXECUTEACTION FUNCTION
 def ExecuteAction(Application, URL, ID, Action, Value, FreeCmd):
@@ -369,6 +408,8 @@ def ExecuteAction(Application, URL, ID, Action, Value, FreeCmd):
         ReturnValue = HomeWizard(URL, ID, Action, Value, FreeCmd)
     elif Application == "DOMOTICZ":
         ReturnValue = Domoticz(URL, ID, Action, Value, FreeCmd)
+    elif Application == "HOMEGENIE":
+        ReturnValue = HomeGenie(URL, ID, Action, Value, FreeCmd)
     else:
         if (debuging): xbmc.log('X10-Lights: An unknown Device Aplication is selected!')
         ReturnValue = "failed"
@@ -691,6 +732,10 @@ elif __addon__.getSetting("DEVAPP") == "6":
         DeviceURL = 'http://' + __addon__.getSetting("USER") + ':' + __addon__.getSetting("PASS") + '@' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/json.htm?type=command&param=switchlight&idx='
     else:
         DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/json.htm?type=command&param=switchlight&idx='
+elif __addon__.getSetting("DEVAPP") == "7":
+    #Security unkown
+    DeviceApplication = "HOMEGENIE"
+    DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/api/HomeAutomation.X10/'
 else:
     DeviceApplication = "UNKOWN"
 
