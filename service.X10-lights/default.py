@@ -6,6 +6,8 @@
     Copyright  : 2014, Majestic Soft, NL
     License    : Gnu General Public License - see LICENSE.TXT
     Description: General control code for X10 - Lights (Domotica Commander)
+    Revision   : 1.0.3 
+                 Updated: Domoticz with DIM/BRIGHT functionality.
     Revision   : 1.0.2 
                  Added: HomeGenie (made by Mack).
                  Fixed: Language issue in addon.xml
@@ -319,10 +321,16 @@ def Domoticz(URL, ID, Action, Value, FreeCmd):
     #Example strings
     #urllib2.urlopen('http://' + my_ip + ':' + my_port + '/json.htm?type=command&param=switchlight&idx=' + my_devid + '&switchcmd=On&level=0')
     #urllib2.urlopen('http://' + my_ip + ':' + my_port + '/json.htm?type=command&param=switchlight&idx=' + my_devid + '&switchcmd=Off&level=0')
-    #http://192.168.1.37:8080/json.htm?type=command&param=switchlight&idx=5&switchcmd=On&level=0
-    #http://192.168.1.37:8080/json.htm?type=command&param=switchlight&idx=5&switchcmd=Off&level=0
-    
+    #urllib2.urlopen('http://' + my_ip + ':' + my_port + '/json.htm?type=command&param=switchlight&idx=' + my_devid + '&switchcmd=Set%20Level&level=6')
     #these are with a plus, since the my_data needs to be concatenated with the url
+    #Remark Level should be a value between 1 (0%) and 16 (100%)
+    #So an additional calculation is made to calculate the percentage back to the 0 to 16 value ((Value/100.0) * 16))
+    #Convert string value to  float
+    fValue = float(Value)
+    #Calulate with float value to determine the integer value between 1 and 16.
+    iValue = int ((fValue/100.0) * 16)
+    #Convert integer back to string for use in URL
+    sValue = str(iValue)
     try:
         if FreeCmd:
             ActionData = ID + '&a=' + Action + '&s=' + Value + ''
@@ -335,11 +343,11 @@ def Domoticz(URL, ID, Action, Value, FreeCmd):
                 ActionData = ID + '&switchcmd=Off&level=0'
                 if (debuging): xbmc.log('X10-Lights: Domoticz, Switch lights or Device OFF')
             elif Action == "BRIGHT":
-                ActionData = ID + '&switchcmd=On&level=' + Value + ''
-                if (debuging): xbmc.log('X10-Lights: Domoticz, Brighten lights with ' + Value + '%')
+                ActionData = ID + '&switchcmd=Set%20Level&level=' + sValue + ''
+                if (debuging): xbmc.log('X10-Lights: Domoticz, Brighten lights with ' + Value + '% converted to: ' + sValue + '')
             elif Action == "DIM":
-                ActionData = ID + '&switchcmd=Off&level=' + Value + ''
-                if (debuging): xbmc.log('X10-Lights: Domoticz, Dim lights with ' + Value + '%')
+                ActionData = ID + '&switchcmd=Set%20Level&level=' + sValue + ''
+                if (debuging): xbmc.log('X10-Lights: Domoticz, Dim lights with ' + Value + '% converted to: ' + sValue + '')
             else:
                 if (debuging): xbmc.log('X10-Lights: Domoticz, No Action available!')
 

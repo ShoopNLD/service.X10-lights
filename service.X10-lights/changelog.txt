@@ -1,3 +1,6 @@
+[B]1.0.3 - 02MAR2014[/B]
+- Updated: Domoticz with DIM/BRIGHT functionality.
+
 [B]1.0.2 - 26JAN2014[/B]
 - Added: HomeGenie (made by Mack).
 - Fixed: Language issue in addon.xml
