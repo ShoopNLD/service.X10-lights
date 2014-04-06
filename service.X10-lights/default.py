@@ -6,8 +6,13 @@
     Copyright  : 2014, Majestic Soft, NL
     License    : Gnu General Public License - see LICENSE.TXT
     Description: General control code for X10 - Lights (Domotica Commander)
+    Revision   : 1.0.4 
+                 Added: LightWaveRF.
+                 Changed: [CORE] X10-Commander handling API calls via UDP
+                 Updated: The Manual
     Revision   : 1.0.3 
                  Updated: Domoticz with DIM/BRIGHT functionality.
+                 Updated: The Manual
     Revision   : 1.0.2 
                  Added: HomeGenie (made by Mack).
                  Fixed: Language issue in addon.xml
@@ -57,6 +62,7 @@ import xbmcgui
 import xbmcaddon
 import urllib
 import urllib2
+import socket
 
 #Initialize ADDON
 __addon__     = xbmcaddon.Addon()
@@ -76,6 +82,9 @@ __addonname__ = __addon__.getAddonInfo('name')
 __cwd__       = __addon__.getAddonInfo('path')
 __author__    = __addon__.getAddonInfo('author')
 __version__   = __addon__.getAddonInfo('version')
+
+#Initialize Transaction number
+TransactionID = 100
 
 if (debuging): 
     xbmc.log('X10-Lights: *************** Addon information ***************')
@@ -119,7 +128,7 @@ def X10Commander(URL, ID, Action, Value, FreeCmd):
                 if (debuging): xbmc.log('X10-Lights: X10-Commander, No Action available!')
 
         if (debuging): xbmc.log('X10-Lights: X10-Commander, URL: ' + URL + ActionData)
-        X10CommanderRequest = urllib2.urlopen(URL + ActionData)
+        CommandRequest = urllib2.urlopen(URL + ActionData)
         if (debuging): xbmc.log('X10-Lights: Action Send to X10-Commander')
         ReturnValue = "success"
     except:
@@ -153,8 +162,8 @@ def HomeSeer(URL, ID, Action, Value, FreeCmd):
             else:
                 if (debuging): xbmc.log('X10-Lights: HomeSeer, No Action available!')
 
-        HomeSeerRequest = urllib2.urlopen(URL, ActionData)
-        if (debuging): xbmc.log('X10-Lights: HomeSeer, Request: ' + HomeSeerRequest)
+        CommandRequest = urllib2.urlopen(URL, ActionData)
+        if (debuging): xbmc.log('X10-Lights: HomeSeer, Request: ' + CommandRequest)
         if (debuging): xbmc.log('X10-Lights: Action Send to HomeSeer')
         ReturnValue = "success"
     except:
@@ -192,7 +201,7 @@ def tenHsServer(URL, ID, Action, Value, FreeCmd):
                 if (debuging): xbmc.log('X10-Lights: tenHsServer, No Action available!')
 
         if (debuging): xbmc.log('X10-Lights: tenHsServer, URL: ' + URL + ActionData)
-        X10CommanderRequest = urllib2.urlopen(URL + ActionData)
+        CommandRequest = urllib2.urlopen(URL + ActionData)
         if (debuging): xbmc.log('X10-Lights: Action Send to tenHsServer')
         ReturnValue = "success"
     except:
@@ -229,7 +238,7 @@ def SwitchKing(URL, ID, Action, Value, FreeCmd):
                 if (debuging): xbmc.log('X10-Lights: Switch King, No Action available!')
 
         if (debuging): xbmc.log('X10-Lights: Switch King, URL: ' + URL + ActionData)
-        X10CommanderRequest = urllib2.urlopen(URL + ActionData)
+        CommandRequest = urllib2.urlopen(URL + ActionData)
         if (debuging): xbmc.log('X10-Lights: Action Send to Switch King')
         ReturnValue = "success"
     except:
@@ -268,7 +277,7 @@ def ThinkingHome(URL, ID, Action, Value, FreeCmd):
                 if (debuging): xbmc.log('X10-Lights: Thinking Home, No Action available!')
 
         if (debuging): xbmc.log('X10-Lights: Thinking Home, URL: ' + URL + ActionData)
-        X10CommanderRequest = urllib2.urlopen(URL + ActionData)
+        CommandRequest = urllib2.urlopen(URL + ActionData)
         if (debuging): xbmc.log('X10-Lights: Action Send to Thinking Home')
         ReturnValue = "success"
     except:
@@ -306,7 +315,7 @@ def HomeWizard(URL, ID, Action, Value, FreeCmd):
                 if (debuging): xbmc.log('X10-Lights: HomeWizard, No Action available!')
 
         if (debuging): xbmc.log('X10-Lights: HomeWizard, URL: ' + URL + ActionData)
-        X10CommanderRequest = urllib2.urlopen(URL + ActionData)
+        CommandRequest = urllib2.urlopen(URL + ActionData)
         if (debuging): xbmc.log('X10-Lights: Action Send to HomeWizard')
         ReturnValue = "success"
     except:
@@ -352,7 +361,7 @@ def Domoticz(URL, ID, Action, Value, FreeCmd):
                 if (debuging): xbmc.log('X10-Lights: Domoticz, No Action available!')
 
         if (debuging): xbmc.log('X10-Lights: Domoticz, URL: ' + URL + ActionData)
-        X10CommanderRequest = urllib2.urlopen(URL + ActionData)
+        CommandRequest = urllib2.urlopen(URL + ActionData)
         if (debuging): xbmc.log('X10-Lights: Action Send to Domoticz')
         ReturnValue = "success"
     except:
@@ -389,7 +398,7 @@ def HomeGenie(URL, ID, Action, Value, FreeCmd):
                 if (debuging): xbmc.log('X10-Lights: HomeGenie, No Action available!')
 
         if (debuging): xbmc.log('X10-Lights: HomeGenie, URL: ' + URL + ActionData)
-        X10CommanderRequest = urllib2.urlopen(URL + ActionData)
+        CommandRequest = urllib2.urlopen(URL + ActionData)
         if (debuging): xbmc.log('X10-Lights: Action Send to HomeGenie')
         ReturnValue = "success"
     except:
@@ -397,8 +406,83 @@ def HomeGenie(URL, ID, Action, Value, FreeCmd):
         ReturnValue = "fail"
     return ReturnValue
 
+# LightWaveRF FUNCTION 
+#This function Will execute the requested action in LightWaveRF
+def LightWaveRF(URL, ID, Action, Value, FreeCmd, ROOM):
+    #LightWaveRF STYLE
+    #This system uses Transaction ID to send with the message
+    global TransactionID
+    #this system uses UDP and not a URL request, therefor a socket is needed
+    #Initialize a socket 
+    #IAF_INET specifies the usage of IP4v adresses
+    #SOCK_DGRAM specifies that it is UDP
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
+    #Example strings 
+    #IMPORTANT, ID must be build of a ROOM number (1 till 16) and a DEVICE number (1 till 16)
+    #HOST = URL (from host: till start of Port)
+    #PORT = URL (from port: till end) (default port for LightWaveRF = 9760)
+    #PACKAGE = Build up command of ID, Action, Value or FreeCmd
+    #ID must be build up of room device separated with a space.
+    #Command structure for Device ON:     TransactionID,!R{room}D{id}F1<cr> IMPORTANT commands must allways end with Carige Return <cr>
+    #Command structure for Device OFF:    TransactionID,!R{room}D{id}F0<cr> IMPORTANT commands must allways end with Carige Return <cr>
+    #Command structure for Device BRIGHT: TransactionID,!R{room}D{id}F0dP29<cr> IMPORTANT commands must allways end with Carige Return <cr>
+    #Command structure for Device DIM:    TransactionID,!R{room}D{id}F0dP3<cr> IMPORTANT commands must allways end with Carige Return <cr>
+    URLStartHost = 5
+    URLEndHost = URL.find("port:") - 1
+    URLStartPort = URL.find("port:") + 6
+    URLEndPort = len(URL)
+    #HOST
+    URLHost = URL[URLStartHost:URLEndHost]
+    #PORT (must be an integer)
+    strURLPort = URL[URLStartPort:URLEndPort]
+    URLPort = int(float(strURLPort))
+    #Remark Level should be a value between 1 (0%) and 32 (100%)
+    #So an additional calculation is made to calculate the percentage back to the 0 to 326 value ((Value/100.0) * 32))
+    #Convert string value to float
+    fValue = float(Value)
+    #Calulate with float value to determine the integer value between 1 and 32.
+    iValue = int ((fValue/100.0) * 32)
+    #Convert integer back to string for use in URL
+    sValue = str(iValue)
+    #try:
+    if FreeCmd:
+        ActionData = ID + '/Control.' + Action + '/' + Value
+        if (debuging): xbmc.log('X10-Lights: LightWaveRF, Action: ' + Action + ', with value: ' + Value + '.')
+    else:
+        if Action == "ON":
+            ActionData = str(TransactionID) + ',!R' + ROOM + 'D' + ID + 'F1'
+            if (debuging): xbmc.log('X10-Lights: LightWaveRF, Switch lights or Device ON')
+        elif Action == "OFF":
+            ActionData = str(TransactionID) + ',!R' + ROOM + 'D' + ID + 'F0'
+            if (debuging): xbmc.log('X10-Lights: LightWaveRF, Switch lights or Device OFF')
+        elif Action == "BRIGHT":
+            ActionData = str(TransactionID) + ',!R' + ROOM + 'D' + ID + 'FdP' + sValue + ''
+            if (debuging): xbmc.log('X10-Lights: LightWaveRF, Brighten lights to ' + Value + '%')
+        elif Action == "DIM":
+            ActionData = str(TransactionID) + ',!R' + ROOM + 'D' + ID + 'FdP' + sValue + ''
+            if (debuging): xbmc.log('X10-Lights: LightWaveRF, Dim lights to ' + Value + '%')
+        else:
+            if (debuging): xbmc.log('X10-Lights: LightWaveRF, No Action available!')
+
+    if (debuging): xbmc.log('X10-Lights: LightWaveRF, HOST: ' + URLHost + ' PORT: ' + str(URLPort) + ' Package:' + ActionData)
+    #Connect the socket to the address location
+    s.connect((URLHost, URLPort))
+    #send the command
+    s.send(ActionData)
+    if (debuging): xbmc.log('X10-Lights: Action Send to LightWaveRF')
+    ReturnValue = "success"
+    #except:
+    #    if (debuging): xbmc.log('X10-Lights: LightWaveRF, The ' + Action + ' Event Failed')
+    #    pass
+    #    ReturnValue = "fail"
+        
+    #close the socket
+    s.close()
+    TransactionID = TransactionID + 1
+    return ReturnValue
+
 # EXECUTEACTION FUNCTION
-def ExecuteAction(Application, URL, ID, Action, Value, FreeCmd):
+def ExecuteAction(Application, URL, ID, Action, Value, FreeCmd, Room="0"):
     #This function is a simple selector 
     #It will call the correct Application to execute the desired action
     #This section should be expended with new aplication's as they come available
@@ -418,6 +502,8 @@ def ExecuteAction(Application, URL, ID, Action, Value, FreeCmd):
         ReturnValue = Domoticz(URL, ID, Action, Value, FreeCmd)
     elif Application == "HOMEGENIE":
         ReturnValue = HomeGenie(URL, ID, Action, Value, FreeCmd)
+    elif Application == "LIGHTWAVERF":
+        ReturnValue = LightWaveRF(URL, ID, Action, Value, FreeCmd, Room)
     else:
         if (debuging): xbmc.log('X10-Lights: An unknown Device Aplication is selected!')
         ReturnValue = "failed"
@@ -440,9 +526,9 @@ def EventAction(Action):
 # MAINEVENTHANDLER FUNCTION
 def MainEventHandler(Type):
     #This function is the MainEventHandler, 
-    #It recieve the type of event that needs to be executed
+    #It recieve's the type of event that needs to be executed
     #The type of event comes from XMBC or the XBMC Player
-    #for every active Device, where the event is enabled it will execute the action (ExecuteAction)
+    #For every active Device, where the event is enabled, it will execute the action (ExecuteAction)
     
     #INITIALIZE
     DeviceCount = 1
@@ -457,6 +543,7 @@ def MainEventHandler(Type):
     while (DeviceCount <= 5):
         #INITIALIZE per device
         ID = ""
+        ROOM = ""
         ActionEvent = ""
         ActionValue = ""
         ActionFreeCmd = ""
@@ -465,14 +552,21 @@ def MainEventHandler(Type):
         if (DeviceCount <= 9):
             strCheckDeviceEnabled = "DEVID0" + str(DeviceCount) + "ENABLE"
             strCheckDeviceID = "DEVID0" + str(DeviceCount)
+            strCheckRoomEnabled = "ROOM0" + str(DeviceCount) + "ENABLE"
+            strCheckRoom = "ROOM0" + str(DeviceCount)
         else:
             strCheckDeviceEnabled = "DEVID" + str(DeviceCount) + "ENABLE"
             strCheckDeviceID = "DEVID" + str(DeviceCount)
+            strCheckRoomEnabled = "ROOM" + str(DeviceCount) + "ENABLE"
+            strCheckRoom = "ROOM" + str(DeviceCount)
         
         #Execute Event if Device is enabled
         if (str(__addon__.getSetting(strCheckDeviceEnabled)) == "true"):
             ID = __addon__.getSetting(strCheckDeviceID)
-            
+            if (str(__addon__.getSetting(strCheckRoomEnabled)) == "true"):
+                ROOM = __addon__.getSetting(strCheckRoom)
+            else:
+                ROOM = "0"
             #Retrieve specific device settings for the Event
             if Type == "X_Start":
                 if (DeviceCount <= 9):
@@ -673,12 +767,13 @@ def MainEventHandler(Type):
             
             #Call to Execute the action on the device
             if (ExecuteEvent):
-                ActionCall = ExecuteAction(Application, URL, ID, ActionEvent, ActionValue, ActionFreeCmd)
+                ActionCall = ExecuteAction(Application, URL, ID, ActionEvent, ActionValue, ActionFreeCmd, ROOM)
                 if (debuging): 
                     xbmc.log('X10-Lights: Event Device ID = ' + str(ID))
                     xbmc.log('X10-Lights: Event Action    = ' + str(ActionEvent))
                     xbmc.log('X10-Lights: Event Value     = ' + str(ActionValue))
                     xbmc.log('X10-Lights: Event Free CMD  = ' + str(ActionFreeCmd))
+                    xbmc.log('X10-Lights: Event ROOM      = ' + str(ROOM))
                     xbmc.log('X10-Lights: *************************************************')
             else:
                 ActionCall = "failed"
@@ -744,6 +839,10 @@ elif __addon__.getSetting("DEVAPP") == "7":
     #Security unkown
     DeviceApplication = "HOMEGENIE"
     DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/api/HomeAutomation.X10/'
+elif __addon__.getSetting("DEVAPP") == "8":
+    #Security Not Applicable (This application use's UDP instead of TCP/IP, therefore the URL is showing Host and Port)
+    DeviceApplication = "LIGHTWAVERF"
+    DeviceURL = 'host: ' + __addon__.getSetting("IP") + ' port: ' + __addon__.getSetting("PORT")
 else:
     DeviceApplication = "UNKOWN"
 

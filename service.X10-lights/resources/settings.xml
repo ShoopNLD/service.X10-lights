@@ -14,12 +14,14 @@
         <setting id="SECURITY" label="30002" type="bool" default="false"/>
         <setting id="USER" label="30003" type="text" visible="eq(-1,true)" default="username"/>
         <setting id="PASS" label="30004" type="text" visible="eq(-2,true)" default="password" option="hidden"/>
-        <setting id="DEVAPP" label="30100" type="enum" values="X10 Commander|HomeSeer|tenHsServer|Switch King|Thinking Home|HomeWizard|Domoticz|HomeGenie" default="0"/>
+        <setting id="DEVAPP" label="30100" type="enum" values="X10 Commander|HomeSeer|tenHsServer|Switch King|Thinking Home|HomeWizard|Domoticz|HomeGenie|LightWaveRF" default="0"/>
         <setting id="DEBUGLOG" label="30005" type="bool" default="false"/>
     </category>
     <category label="30501">
         <setting id="DEVID01ENABLE" label="30210" type="bool" default="true"/>
         <setting id="DEVID01" label="30101" type="text" visible="eq(-1,true)" default="A1"/>
+        <setting id="ROOM01ENABLE" label="30213" type="bool" default="false"/>
+        <setting id="ROOM01" label="30301" type="text" visible="eq(-1,true)" default="1"/>
         <setting id="XEVSTARTENABLE01" label="30211" type="bool" default="false"/>
         <setting id="XEVSTARTFREE01" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
         <setting id="XEVSTART01" label="30200" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
@@ -66,6 +68,8 @@
     <category label="30502">
         <setting id="DEVID02ENABLE" label="30210" type="bool" default="false"/>
         <setting id="DEVID02" label="30102" type="text" visible="eq(-1,true)" default="A2"/>
+        <setting id="ROOM02ENABLE" label="30213" type="bool" default="false"/>
+        <setting id="ROOM02" label="30302" type="text" visible="eq(-1,true)" default="1"/>
         <setting id="XEVSTARTENABLE02" label="30211" type="bool" default="false"/>
         <setting id="XEVSTARTFREE02" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
         <setting id="XEVSTART02" label="30200" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
@@ -112,6 +116,8 @@
     <category label="30503">
         <setting id="DEVID03ENABLE" label="30210" type="bool" default="false"/>
         <setting id="DEVID03" label="30102" type="text" visible="eq(-1,true)" default="A3"/>
+        <setting id="ROOM03ENABLE" label="30213" type="bool" default="false"/>
+        <setting id="ROOM03" label="30303" type="text" visible="eq(-1,true)" default="1"/>
         <setting id="XEVSTARTENABLE03" label="30211" type="bool" default="false"/>
         <setting id="XEVSTARTFREE03" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
         <setting id="XEVSTART03" label="30200" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
@@ -158,6 +164,8 @@
     <category label="30504">
         <setting id="DEVID04ENABLE" label="30210" type="bool" default="false"/>
         <setting id="DEVID04" label="30102" type="text" visible="eq(-1,true)" default="A4"/>
+        <setting id="ROOM04ENABLE" label="30213" type="bool" default="false"/>
+        <setting id="ROOM04" label="30304" type="text" visible="eq(-1,true)" default="1"/>
         <setting id="XEVSTARTENABLE04" label="30211" type="bool" default="false"/>
         <setting id="XEVSTARTFREE04" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
         <setting id="XEVSTART04" label="30200" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>
@@ -204,6 +212,8 @@
     <category label="30505">
         <setting id="DEVID05ENABLE" label="30210" type="bool" default="false"/>
         <setting id="DEVID05" label="30102" type="text" visible="eq(-1,true)" default="A5"/>
+        <setting id="ROOM05ENABLE" label="30213" type="bool" default="false"/>
+        <setting id="ROOM05" label="30305" type="text" visible="eq(-1,true)" default="1"/>
         <setting id="XEVSTARTENABLE05" label="30211" type="bool" default="false"/>
         <setting id="XEVSTARTFREE05" label="30209" type="bool" visible="eq(-1,true)" default="false"/>
         <setting id="XEVSTART05" label="30200" type="enum" visible="eq(-2,true)+eq(-1,false)" subsetting="true" values="DIM|BRIGHT|ON|OFF" default="0"/>

@@ -9,7 +9,7 @@
 -->
 <addon id="service.X10-lights"
        name="X10 - Lights (Domotica Commander)"
-       version="1.0.2"
+       version="1.0.4"
        provider-name="Majestic Soft">
   <requires>
     <import addon="xbmc.python" version="1.0"/>
@@ -30,6 +30,7 @@
     - HomeWizard.
     - Domoticz.
     - HomeGenie.
+    - LightWaveRF.
     </description>
     <description lang="nl">Bediend meerdere lampen (aparaten) tijdens het bekijken van een video, via een domotica server
     - X10 Commander software van Melloware.
@@ -40,6 +41,7 @@
     - HomeWizard.
     - Domoticz.
     - HomeGenie.
+    - LightWaveRF
     </description>
     <platform>all</platform>
   </extension>

@@ -3,7 +3,7 @@
     Document   : settings.xml
     Package    : X10 Commander Lights
     Author     : Majestic Soft
-    Copyright  : 2012, Majestic Soft, NL
+    Copyright  : 2014, Majestic Soft, NL
     License    : Gnu General Public License - see LICENSE.TXT
     Description: English language strings for X10 Commander Lights
 -->
@@ -42,4 +42,10 @@
     <string id="30210">Device Active</string>
     <string id="30211">XBMC Start event</string>
     <string id="30212">XBMC Stop event</string>
+    <string id="30213">Room Active (LightWaveRF only)</string>
+    <string id="30301">Room for Device ID 01</string>
+    <string id="30302">Room for Device ID 02</string> 
+    <string id="30303">Room for Device ID 03</string> 
+    <string id="30304">Room for Device ID 04</string> 
+    <string id="30305">Room for Device ID 05</string> 
 </strings>

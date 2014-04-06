@@ -1,5 +1,11 @@
+[B]1.0.4 - 06APR2014[/B]
+- Added: LightWaveRF.
+- Changed: [CORE] X10-Commander handling API calls via UDP Broadcasts.
+- Updated: The Manual
+
 [B]1.0.3 - 02MAR2014[/B]
 - Updated: Domoticz with DIM/BRIGHT functionality.
+- Updated: The Manual
 
 [B]1.0.2 - 26JAN2014[/B]
 - Added: HomeGenie (made by Mack).
