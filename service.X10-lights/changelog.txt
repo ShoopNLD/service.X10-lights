@@ -1,3 +1,11 @@
+[B]2.0.0 - 14NOV2026[/B]
+- Migrated: Complete codebase from Python 2 to Python 3 (Kodi 19 Matrix, 20 Nexus, 21 Omega, 22 Piers+).
+- Changed: [CORE] Replaced obsolete xbmc.abortRequested polling loop with event-driven xbmc.Monitor().waitForAbort().
+- Changed: [CORE] Upgraded network communications to urllib.request and urllib.parse with timeouts.
+- Changed: [CORE] Converted UDP socket communications (LightWaveRF) to bytes.
+- Added: Modern Kodi PO translation catalogs (en_GB and nl_NL).
+- Updated: addon.xml metadata to modern Kodi specifications.
+
 [B]1.0.4 - 06APR2014[/B]
 - Added: LightWaveRF.
 - Changed: [CORE] X10-Commander handling API calls via UDP Broadcasts.

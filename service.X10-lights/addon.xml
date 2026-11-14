@@ -3,25 +3,23 @@
     Document   : addon.xml
     Package    : X10 - Lights (Domotica Commander)
     Author     : Majestic Soft
-    Copyright  : 2014, Majestic Soft, NL
-    License    : Gnu General Public License - see LICENSE.TXT
+    Copyright  : 2014-2026, Majestic Soft, NL
+    License    : GNU General Public License v2 - see LICENSE
     Description: Addon details for X10 - Lights (Domotica Commander)
 -->
 <addon id="service.X10-lights"
        name="X10 - Lights (Domotica Commander)"
-       version="1.0.4"
+       version="2.0.0"
        provider-name="Majestic Soft">
   <requires>
-    <import addon="xbmc.python" version="1.0"/>
+    <import addon="xbmc.python" version="3.0.0"/>
   </requires>
   <extension point="xbmc.service"
-            library="default.py" start="login|startup">
-        <provides>service</provides>
-  </extension>
+             library="default.py"/>
   <extension point="xbmc.addon.metadata">
-    <summary>X10 - Lights (Domotica Commander)</summary>
-    <summary lang="nl">X10 - Lampen (Domotica Commandant)</summary>
-    <description>Controls multiple lights (devices) during watching of a video, via a domotica server:
+    <summary lang="en_GB">X10 - Lights (Domotica Commander)</summary>
+    <summary lang="nl_NL">X10 - Lampen (Domotica Commandant)</summary>
+    <description lang="en_GB">Controls multiple lights (devices) during watching of a video, via a domotica server:
     - X10 Commander software from Melloware.
     - HomeSeer.
     - tenHsServer.
@@ -32,7 +30,7 @@
     - HomeGenie.
     - LightWaveRF.
     </description>
-    <description lang="nl">Bediend meerdere lampen (aparaten) tijdens het bekijken van een video, via een domotica server
+    <description lang="nl_NL">Bediend meerdere lampen (apparaten) tijdens het bekijken van een video, via een domotica server:
     - X10 Commander software van Melloware.
     - HomeSeer.
     - tenHsServer.
@@ -41,8 +39,22 @@
     - HomeWizard.
     - Domoticz.
     - HomeGenie.
-    - LightWaveRF
+    - LightWaveRF.
     </description>
+    <news>v2.0.0 (2026-11):
+- Migrated code to Python 3 for modern Kodi (Matrix v19, Nexus v20, Omega v21, Piers v22+).
+- Replaced obsolete polling loop with event-driven xbmc.Monitor().waitForAbort().
+- Upgraded urllib/urllib2 network communication to urllib.request and urllib.parse.
+- Added explicit network timeouts to prevent Kodi UI blocking.
+- Converted LightWaveRF UDP broadcasts to bytes (utf-8).
+- Added modern PO language translation catalogs.
+    </news>
     <platform>all</platform>
+    <license>GPL-2.0-only</license>
+    <source>https://github.com/ShoopNLD/service.X10-lights</source>
+    <forum>https://forum.kodi.tv/</forum>
+    <assets>
+      <icon>icon.png</icon>
+    </assets>
   </extension>
 </addon>

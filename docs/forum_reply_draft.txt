@@ -1,0 +1,20 @@
+Forum: Kodi Community Forum > Support > Add-on Support > Program Add-ons > [RELEASE] X10 - lights (Domotica Commander)
+Topic URL: https://forum.kodi.tv/ (of jouw opgeslagen link)
+
+--------------------------------------------------------------------------------
+Concept Reply for Shoop_NL:
+--------------------------------------------------------------------------------
+
+Better late than never! 😉
+
+After quite a few years of silence, I recently dusted off the original project files from my NAS and completely revived it! 
+
+I reconstructed the entire historical release timeline (2011–2014) and published the repository on GitHub:
+👉 https://github.com/ShoopNLD/service.X10-lights
+
+The project is currently being modernized:
+- Full migration from Python 2 to Python 3 for modern Kodi versions (Nexus v20, Omega v21, Piers v22+).
+- Modern xbmc.Monitor() event handling (replacing the old polling loop).
+- Preserving support for legacy domotica systems (including X10-Commander, Domoticz, HomeSeer, HomeWizard, LightWaveRF) while preparing modern integrations like Home Assistant and MQTT.
+
+If you still need help with X10 Commander or have questions, feel free to ask here or open an issue on the GitHub repository!

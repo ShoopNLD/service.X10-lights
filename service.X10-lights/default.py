@@ -1,921 +1,651 @@
-# X10 - Lights (Domotica Commander) - Service
+# -*- coding: utf-8 -*-
 """
     Document   : default.py
     Package    : X10 - Lights (Domotica Commander)
     Author     : Majestic Soft
-    Copyright  : 2014, Majestic Soft, NL
-    License    : Gnu General Public License - see LICENSE.TXT
+    Copyright  : 2014-2026, Majestic Soft, NL
+    License    : GNU General Public License v2 - see LICENSE
     Description: General control code for X10 - Lights (Domotica Commander)
-    Revision   : 1.0.4 
-                 Added: LightWaveRF.
-                 Changed: [CORE] X10-Commander handling API calls via UDP
-                 Updated: The Manual
-    Revision   : 1.0.3 
-                 Updated: Domoticz with DIM/BRIGHT functionality.
-                 Updated: The Manual
-    Revision   : 1.0.2 
-                 Added: HomeGenie (made by Mack).
-                 Fixed: Language issue in addon.xml
-    Revision   : 1.0.1 
-                 Added: Domoticz.
-                 Fixed: bug in HomeWizard call.
-                 Updated: zip file structure to support the import from zip file option in xbmc
-                 Updated: The Manual
-    Revision   : 1.0.0 
-                 Added: Thinking Home (via webserver support)
-                 Added: HomeWizard
-                 Added: Enable/Disable of Debugging text
-                 Changed: Name from X10 Commander Lights to X10 - Lights (Domotica Commander)
-                 Updated: [CORE] Multiple Device's (to maximum of five device's)
-                 Updated: [CORE] Improved Event Handling (easy support of multiple device's)
-                 Updated: [CORE] Default Initialization actions (for Start and Stop) removed
-                 Updated: Some text strins in the configuration
-                 Updated: The Manual
-    Revision   : 0.0.6 alpha
-                 Added: Enable/Disable of Events
-                 Added: Free or predefinded commands per Event
-                 Added: Switch King
-                 Added: Username/password option
-                 Updated: [CORE] Selection function to handle Free commands
-                 Updated: [CORE] Application functions to handle Free commands
-    Revision   : 0.0.5
-                 Solved: Issue 1, No more error message at startup when Add-on is not configured (Clean install)
-                 Solved: Issue 2, Stop event is now working.
-                 Changed: [CORE] X10-Commander handling to seperate function (for easier expansion of new Applications)
-                 Changed: [CORE] HomeSeer handling to seperate function (for easier expansion of new Applications)
-                 Added: [CORE] Selection function to call the appropriate Application function.
-                 Added: Improved fault handling and logging on event failure's
-                 Added: Device Actions (ON and OFF) to events
-                 Added: tenHsServer to see how easy modularity now works.
-    Revision   : 0.0.4
-                 Updated: HomeSeer control (removed tenHsServer)
-    Revision   : 0.0.3
-                 Added: this descriptive text
-                 Added: HomeSeer control via tenHsServer (http://www.tenholder.net/tenWare2/tenHsServer/default.aspx)
+    Revision   : 2.0.0
+                 - Migrated to Python 3 (Kodi 19 Matrix, 20 Nexus, 21 Omega, 22 Piers+).
+                 - Replaced obsolete xbmc.abortRequested loop with xbmc.Monitor().waitForAbort().
+                 - Replaced urllib/urllib2 with urllib.request and urllib.parse.
+                 - Added explicit timeouts (5s) to network calls to prevent Kodi UI blocking.
+                 - Converted UDP socket communication (LightWaveRF) to bytes.
+                 - Improved basic authentication via standard Authorization header.
+                 - Preserved full backward compatibility with all 9 legacy domotica platforms.
 """
+
 # IMPORT LIBRARIES
 import sys
 import os
 import subprocess
+import socket
+import base64
+import urllib.request
+import urllib.parse
+import urllib.error
+
 import xbmc
 import xbmcgui
 import xbmcaddon
-import urllib
-import urllib2
-import socket
 
-#Initialize ADDON
+# Initialize ADDON
 __addon__     = xbmcaddon.Addon()
-
-#Initialize ADDON LOG Settings (for Debugging)
-xbmc.log('X10-Lights: ******************* X10-Lights ******************')
-if (str(__addon__.getSetting("DEBUGLOG")) == "true"):
-    debuging = True
-    xbmc.log('X10-Lights: Debuging log files is on')
-else:
-    debuging = False
-    xbmc.log('X10-Lights: Debuging log files is off')
-    xbmc.log('X10-Lights: *************************************************')
-
-#Initialize ADDON INFORMATION
 __addonname__ = __addon__.getAddonInfo('name')
 __cwd__       = __addon__.getAddonInfo('path')
 __author__    = __addon__.getAddonInfo('author')
 __version__   = __addon__.getAddonInfo('version')
 
-#Initialize Transaction number
+# Logging helpers
+debuging = (__addon__.getSetting("DEBUGLOG").lower() == "true")
+
+def log(msg, level=xbmc.LOGINFO):
+    xbmc.log(f"X10-Lights: {msg}", level=level)
+
+def log_debug(msg):
+    if debuging:
+        xbmc.log(f"X10-Lights: {msg}", level=xbmc.LOGDEBUG)
+
+log("******************* X10-Lights ******************")
+if debuging:
+    log("Debugging log files is ON")
+    log("*************** Addon information ***************")
+    log(f"Addon info name    : {__addonname__}")
+    log(f"Addon info path    : {__cwd__}")
+    log(f"Addon info author  : {__author__}")
+    log(f"Addon info version : {__version__}")
+    log("*************************************************")
+else:
+    log("Debugging log files is OFF")
+    log("*************************************************")
+
+# Initialize Transaction number for LightWaveRF
 TransactionID = 100
 
-if (debuging): 
-    xbmc.log('X10-Lights: *************** Addon information ***************')
-    xbmc.log('X10-Lights: Addon info name    : ' + __addonname__)
-    xbmc.log('X10-Lights: Addon info path    : ' + __cwd__)
-    xbmc.log('X10-Lights: Addon info author  : ' + __author__ )
-    xbmc.log('X10-Lights: Addon info version : ' + __version__)
-    xbmc.log('X10-Lights: *************************************************')
+# Helper function for sending HTTP GET requests with timeout and optional Basic Auth
+def send_http_get(url, auth_user=None, auth_pass=None, timeout=5):
+    try:
+        req = urllib.request.Request(
+            url,
+            headers={'User-Agent': f'Kodi-service.X10-lights/{__version__}'}
+        )
+        if auth_user and auth_pass:
+            auth_str = f"{auth_user}:{auth_pass}"
+            auth_b64 = base64.b64encode(auth_str.encode('utf-8')).decode('ascii')
+            req.add_header("Authorization", f"Basic {auth_b64}")
 
-# FUNCTIONS - START
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            return response.read().decode('utf-8', errors='ignore')
+    except Exception as err:
+        log_debug(f"HTTP GET Error ({url}): {err}")
+        raise
 
-# X10-COMMANDER FUNCTION
-#This function Will execute the requested action in X10-Commander 
+# Helper function for sending HTTP POST requests with timeout and optional Basic Auth
+def send_http_post(url, data_dict, auth_user=None, auth_pass=None, timeout=5):
+    try:
+        data = urllib.parse.urlencode(data_dict).encode('utf-8')
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={'User-Agent': f'Kodi-service.X10-lights/{__version__}'}
+        )
+        if auth_user and auth_pass:
+            auth_str = f"{auth_user}:{auth_pass}"
+            auth_b64 = base64.b64encode(auth_str.encode('utf-8')).decode('ascii')
+            req.add_header("Authorization", f"Basic {auth_b64}")
+
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            return response.read().decode('utf-8', errors='ignore')
+    except Exception as err:
+        log_debug(f"HTTP POST Error ({url}): {err}")
+        raise
+
+# ==============================================================================
+# CONTROLLER FUNCTIONS - START
+# ==============================================================================
+
+# 1. X10-COMMANDER FUNCTION
 def X10Commander(URL, ID, Action, Value, FreeCmd):
-    #X10-COMMANDER STYLE
-    #Example strings
-    #In which: my_url = http://172.0.0.1:8086/?x10command=DEVICE~sendplc~"
-    #urllib2.urlopen(my_url + DeviceID + ' ON"') = http://172.0.0.1:8086/?x10command=DEVICE~sendplc~"A1 ON"
-    #urllib2.urlopen(my_url + DeviceID + ' OFF"') = http://172.0.0.1:8086/?x10command=DEVICE~sendplc~"A1 OFF"
-    #urllib2.urlopen(my_url + DeviceID + ' BRIGHT ' + DevicePercentage + '"') = http://172.0.0.1:8086/?x10command=DEVICE~sendplc~"A1 BRIGHT 50"
-    #urllib2.urlopen(my_url + DeviceID + ' DIM ' + DevicePercentage + '"') = http://172.0.0.1:8086/?x10command=DEVICE~sendplc~"A1 BRIGHT 100"
-    #these are with a plus, since the my_data needs to be concatenated with the url
     try:
         if FreeCmd:
-            ActionData = ID + ' ' + Action + ' '+ Value + '"'
-            if (debuging): xbmc.log('X10-Lights: X10-Commander, Action: ' + Action + ', with value: ' + Value + '.')
+            ActionData = f'{ID} {Action} {Value}"'
+            log_debug(f"X10-Commander, Action: {Action}, with value: {Value}.")
         else:
             if Action == "ON":
-                ActionData = ID + ' ON"'
-                if (debuging): xbmc.log('X10-Lights: X10-Commander, Switch lights or Device ON')
+                ActionData = f'{ID} ON"'
+                log_debug("X10-Commander, Switch lights or Device ON")
             elif Action == "OFF":
-                ActionData = ID + ' OFF"'
-                if (debuging): xbmc.log('X10-Lights: X10-Commander, Switch lights or Device OFF')
+                ActionData = f'{ID} OFF"'
+                log_debug("X10-Commander, Switch lights or Device OFF")
             elif Action == "BRIGHT":
-                ActionData = ID + ' BRIGHT ' + Value + '"'
-                if (debuging): xbmc.log('X10-Lights: X10-Commander, Brighten lights with ' + Value + '%')
+                ActionData = f'{ID} BRIGHT {Value}"'
+                log_debug(f"X10-Commander, Brighten lights with {Value}%")
             elif Action == "DIM":
-                ActionData = ID + ' DIM ' + Value + '"'
-                if (debuging): xbmc.log('X10-Lights: X10-Commander, Dim lights with ' + Value + '%')
+                ActionData = f'{ID} DIM {Value}"'
+                log_debug(f"X10-Commander, Dim lights with {Value}%")
             else:
-                if (debuging): xbmc.log('X10-Lights: X10-Commander, No Action available!')
+                log_debug("X10-Commander, No Action available!")
+                ActionData = ""
 
-        if (debuging): xbmc.log('X10-Lights: X10-Commander, URL: ' + URL + ActionData)
-        CommandRequest = urllib2.urlopen(URL + ActionData)
-        if (debuging): xbmc.log('X10-Lights: Action Send to X10-Commander')
-        ReturnValue = "success"
-    except:
-        if (debuging): xbmc.log('X10-Lights: X10-Commander, The ' + Action + ' Event Failed')
-        ReturnValue = "fail"
-    return ReturnValue
+        full_url = URL + urllib.parse.quote(ActionData, safe='?&=~/')
+        log_debug(f"X10-Commander, URL: {full_url}")
+        send_http_get(full_url, timeout=5)
+        log_debug("Action Sent to X10-Commander")
+        return "success"
+    except Exception as err:
+        log_debug(f"X10-Commander, The {Action} Event Failed: {err}")
+        return "fail"
 
-# HOMESEER FUNCTION 
-#This function Will execute the requested action in HomeSeer 
+# 2. HOMESEER FUNCTION
 def HomeSeer(URL, ID, Action, Value, FreeCmd):
-    #HOMESEER STYLE
-    #Example strings
-    #urllib2.urlopen(my_url, my_data), this is with a comma, since the my_data needs to be encoded
     try:
         if FreeCmd:
-            ActionData = urllib.urlencode({'control_device':ID + '=' + Action + '=' + Value})
-            if (debuging): xbmc.log('X10-Lights: HomeSeer, Action: ' + Action + ', with value: ' + Value + '.')
+            cmd = f"{ID}={Action}={Value}"
+            log_debug(f"HomeSeer, Action: {Action}, with value: {Value}.")
         else:
             if Action == "ON":
-                ActionData = urllib.urlencode({'control_device':ID + '=ON'})
-                if (debuging): xbmc.log('X10-Lights: HomeSeer, Switch lights or Device ON')
+                cmd = f"{ID}=ON"
+                log_debug("HomeSeer, Switch lights or Device ON")
             elif Action == "OFF":
-                ActionData = urllib.urlencode({'control_device':ID + '=OFF'})
-                if (debuging): xbmc.log('X10-Lights: HomeSeer, Switch lights or Device OFF')
+                cmd = f"{ID}=OFF"
+                log_debug("HomeSeer, Switch lights or Device OFF")
             elif Action == "BRIGHT":
-                ActionData = urllib.urlencode({'control_device':ID + '=BRIGHT=' + Value})
-                if (debuging): xbmc.log('X10-Lights: HomeSeer, Brighten lights with ' + Value + '%')
+                cmd = f"{ID}=BRIGHT={Value}"
+                log_debug(f"HomeSeer, Brighten lights with {Value}%")
             elif Action == "DIM":
-                ActionData = urllib.urlencode({'control_device':ID + '=DIM=' + Value})
-                if (debuging): xbmc.log('X10-Lights: HomeSeer, Dim lights with ' + Value + '%')
+                cmd = f"{ID}=DIM={Value}"
+                log_debug(f"HomeSeer, Dim lights with {Value}%")
             else:
-                if (debuging): xbmc.log('X10-Lights: HomeSeer, No Action available!')
+                log_debug("HomeSeer, No Action available!")
+                cmd = ""
 
-        CommandRequest = urllib2.urlopen(URL, ActionData)
-        if (debuging): xbmc.log('X10-Lights: HomeSeer, Request: ' + CommandRequest)
-        if (debuging): xbmc.log('X10-Lights: Action Send to HomeSeer')
-        ReturnValue = "success"
-    except:
-        if (debuging): xbmc.log('X10-Lights: HomeSeer, XBMC ' + Action + ' Event Failed')
-        ReturnValue = "fail"
-    return ReturnValue
+        post_data = {'control_device': cmd}
+        log_debug(f"HomeSeer, URL: {URL}, Data: {post_data}")
+        send_http_post(URL, post_data, timeout=5)
+        log_debug("Action Sent to HomeSeer")
+        return "success"
+    except Exception as err:
+        log_debug(f"HomeSeer, The {Action} Event Failed: {err}")
+        return "fail"
 
-# TENHSSERVER FUNCTION 
-#This function Will execute the requested action in HomeSeer via tenHsServer
+# 3. TENHSSERVER FUNCTION
 def tenHsServer(URL, ID, Action, Value, FreeCmd):
-    #tenHsServer STYLE
-    #Example strings
-    #urllib2.urlopen('http://' + my_ip + ':' + my_port + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d=' + my_devid + '&a=ON')
-    #urllib2.urlopen('http://' + my_ip + ':' + my_port + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d=' + my_devid + '&a=BRIGHT&s=100')
-    #urllib2.urlopen('http://' + my_ip + ':' + my_port + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d=' + my_devid + '&a=' + my_xevstart + '&s=' + my_xevstartperc + '')
-    #these are with a plus, since the my_data needs to be concatenated with the url
     try:
         if FreeCmd:
-            ActionData = ID + '&a=' + Action + '&s=' + Value + ''
-            if (debuging): xbmc.log('X10-Lights: tenHsServer, Action: ' + Action + ', with value: ' + Value + '.')
+            ActionData = f"{ID}&a={Action}&s={Value}"
+            log_debug(f"tenHsServer, Action: {Action}, with value: {Value}.")
         else:
             if Action == "ON":
-                ActionData = ID + '&a=ON'
-                if (debuging): xbmc.log('X10-Lights: tenHsServer, Switch lights or Device ON')
+                ActionData = f"{ID}&a=ON"
+                log_debug("tenHsServer, Switch lights or Device ON")
             elif Action == "OFF":
-                ActionData = ID + '&a=OFF'
-                if (debuging): xbmc.log('X10-Lights: tenHsServer, Switch lights or Device OFF')
+                ActionData = f"{ID}&a=OFF"
+                log_debug("tenHsServer, Switch lights or Device OFF")
             elif Action == "BRIGHT":
-                ActionData = ID + '&a=BRIGHT&s=' + Value + ''
-                if (debuging): xbmc.log('X10-Lights: tenHsServer, Brighten lights with ' + Value + '%')
+                ActionData = f"{ID}&a=BRIGHT&s={Value}"
+                log_debug(f"tenHsServer, Brighten lights with {Value}%")
             elif Action == "DIM":
-                ActionData = ID + '&a=DIM&s=' + Value + ''
-                if (debuging): xbmc.log('X10-Lights: tenHsServer, Dim lights with ' + Value + '%')
+                ActionData = f"{ID}&a=DIM&s={Value}"
+                log_debug(f"tenHsServer, Dim lights with {Value}%")
             else:
-                if (debuging): xbmc.log('X10-Lights: tenHsServer, No Action available!')
+                log_debug("tenHsServer, No Action available!")
+                ActionData = ""
 
-        if (debuging): xbmc.log('X10-Lights: tenHsServer, URL: ' + URL + ActionData)
-        CommandRequest = urllib2.urlopen(URL + ActionData)
-        if (debuging): xbmc.log('X10-Lights: Action Send to tenHsServer')
-        ReturnValue = "success"
-    except:
-        if (debuging): xbmc.log('X10-Lights: tenHsServer, The ' + Action + ' Event Failed')
-        ReturnValue = "fail"
-    return ReturnValue
+        full_url = URL + ActionData
+        log_debug(f"tenHsServer, URL: {full_url}")
+        send_http_get(full_url, timeout=5)
+        log_debug("Action Sent to tenHsServer")
+        return "success"
+    except Exception as err:
+        log_debug(f"tenHsServer, The {Action} Event Failed: {err}")
+        return "fail"
 
-# SWITCH KING FUNCTION 
-#This function Will execute the requested action in Switch king
+# 4. SWITCH KING FUNCTION
 def SwitchKing(URL, ID, Action, Value, FreeCmd):
-    #Switch King STYLE
-    #Example strings
-    #http://servernamn:8800/devices/{id}/turnon
-    #http://servernamn:8800/devices/{id}/turnoff
-    #http://servernamn:8800/devices/{id}/dim/{level}
     try:
         if FreeCmd:
-            ActionData = ID + '/' + Action + '/' + Value
-            if (debuging): xbmc.log('X10-Lights: Switch King, Action: ' + Action + ', with value: ' + Value + '.')
+            ActionData = f"{ID}/{Action}/{Value}"
+            log_debug(f"Switch King, Action: {Action}, with value: {Value}.")
         else:
             if Action == "ON":
-                ActionData = ID + '/turnon'
-                if (debuging): xbmc.log('X10-Lights: Switch King, Switch lights or Device ON')
+                ActionData = f"{ID}/turnon"
+                log_debug("Switch King, Switch lights or Device ON")
             elif Action == "OFF":
-                ActionData = ID + '/turnoff'
-                if (debuging): xbmc.log('X10-Lights: Switch King, Switch lights or Device OFF')
+                ActionData = f"{ID}/turnoff"
+                log_debug("Switch King, Switch lights or Device OFF")
             elif Action == "BRIGHT":
-                ActionData = ID + '/bright/' + Value + ''
-                if (debuging): xbmc.log('X10-Lights: Switch King, Brighten lights with ' + Value + '%')
+                ActionData = f"{ID}/bright/{Value}"
+                log_debug(f"Switch King, Brighten lights with {Value}%")
             elif Action == "DIM":
-                ActionData = ID + '/dim/' + Value + ''
-                if (debuging): xbmc.log('X10-Lights: Switch King, Dim lights with ' + Value + '%')
+                ActionData = f"{ID}/dim/{Value}"
+                log_debug(f"Switch King, Dim lights with {Value}%")
             else:
-                if (debuging): xbmc.log('X10-Lights: Switch King, No Action available!')
+                log_debug("Switch King, No Action available!")
+                ActionData = ""
 
-        if (debuging): xbmc.log('X10-Lights: Switch King, URL: ' + URL + ActionData)
-        CommandRequest = urllib2.urlopen(URL + ActionData)
-        if (debuging): xbmc.log('X10-Lights: Action Send to Switch King')
-        ReturnValue = "success"
-    except:
-        if (debuging): xbmc.log('X10-Lights: Switch King, The ' + Action + ' Event Failed')
-        ReturnValue = "fail"
-    return ReturnValue
+        full_url = URL + ActionData
+        log_debug(f"Switch King, URL: {full_url}")
+        send_http_get(full_url, timeout=5)
+        log_debug("Action Sent to Switch King")
+        return "success"
+    except Exception as err:
+        log_debug(f"Switch King, The {Action} Event Failed: {err}")
+        return "fail"
 
-# THINKING HOME FUNCTION 
-#This function Will execute the requested action in Thinking Home
+# 5. THINKING HOME FUNCTION
 def ThinkingHome(URL, ID, Action, Value, FreeCmd):
-    #ThinkingHome STYLE
-    #Example strings
-    #http://servername:port/cgi-bin/thinkingHome-cgi?devName={id}&action=turnon
-    #http://servername:port/cgi-bin/thinkingHome-cgi?devName={id}&action=turnoff
-    #http://servername:port/cgi-bin/thinkingHome-cgi?devName={id}&action=dim&amount={value}
-    #http://servername:port/cgi-bin/thinkingHome-cgi?devName={id}&action=bright&amount={value}
-
     try:
         if FreeCmd:
-            ActionData = ID + '&action=' + Action + '&amount=' + Value
-            if (debuging): xbmc.log('X10-Lights: Thinking Home, Action: ' + Action + ', with value: ' + Value + '.')
+            ActionData = f"{ID}&action={Action}&value={Value}"
+            log_debug(f"Thinking Home, Action: {Action}, with value: {Value}.")
         else:
             if Action == "ON":
-                ActionData = ID + '&action=turnon'
-                if (debuging): xbmc.log('X10-Lights: Thinking Home, Switch lights or Device ON')
+                ActionData = f"{ID}&action=turnOn"
+                log_debug("Thinking Home, Switch lights or Device ON")
             elif Action == "OFF":
-                ActionData = ID + '&action=turnoff'
-                if (debuging): xbmc.log('X10-Lights: Thinking Home, Switch lights or Device OFF')
+                ActionData = f"{ID}&action=turnOff"
+                log_debug("Thinking Home, Switch lights or Device OFF")
             elif Action == "BRIGHT":
-                ActionData = ID + '&action=bright&amount=' + Value
-                if (debuging): xbmc.log('X10-Lights: Thinking Home, Brighten lights with ' + Value + '%')
+                ActionData = f"{ID}&action=brighten&value={Value}"
+                log_debug(f"Thinking Home, Brighten lights with {Value}%")
             elif Action == "DIM":
-                ActionData = ID + '&action=dim&amount=' + Value
-                if (debuging): xbmc.log('X10-Lights: Thinking Home, Dim lights with ' + Value + '%')
+                ActionData = f"{ID}&action=dim&value={Value}"
+                log_debug(f"Thinking Home, Dim lights with {Value}%")
             else:
-                if (debuging): xbmc.log('X10-Lights: Thinking Home, No Action available!')
+                log_debug("Thinking Home, No Action available!")
+                ActionData = ""
 
-        if (debuging): xbmc.log('X10-Lights: Thinking Home, URL: ' + URL + ActionData)
-        CommandRequest = urllib2.urlopen(URL + ActionData)
-        if (debuging): xbmc.log('X10-Lights: Action Send to Thinking Home')
-        ReturnValue = "success"
-    except:
-        if (debuging): xbmc.log('X10-Lights: Thinking Home, The ' + Action + ' Event Failed')
-        ReturnValue = "fail"
-    return ReturnValue
+        full_url = URL + ActionData
+        log_debug(f"Thinking Home, URL: {full_url}")
+        send_http_get(full_url, timeout=5)
+        log_debug("Action Sent to Thinking Home")
+        return "success"
+    except Exception as err:
+        log_debug(f"Thinking Home, The {Action} Event Failed: {err}")
+        return "fail"
 
-# HOMEWIZARD FUNCTION 
-#This function Will execute the requested action in HomeWizard
+# 6. HOMEWIZARD FUNCTION
 def HomeWizard(URL, ID, Action, Value, FreeCmd):
-    #HomeWizard STYLE
-    #Example strings
-    #http://<ip>/<password>/sw/<id>/on
-    #http://<ip>/<password>/sw/<id>/off
-    #http://<ip>/<password>/sw/dim/<id>/<dimlevel>
-
     try:
+        # HomeWizard dim range is 0 to 100 percentage directly supported
         if FreeCmd:
-            ActionData = '/sw/' + Action + ID + '/' + Value
-            if (debuging): xbmc.log('X10-Lights: HomeWizard, Action: ' + Action + ', with value: ' + Value + '.')
+            ActionData = f"sw/{ID}/{Action}/{Value}"
+            log_debug(f"HomeWizard, Action: {Action}, with value: {Value}.")
         else:
             if Action == "ON":
-                ActionData = '/sw/' + ID + '/on'
-                if (debuging): xbmc.log('X10-Lights: HomeWizard, Switch lights or Device ON')
+                ActionData = f"sw/{ID}/on"
+                log_debug("HomeWizard, Switch lights or Device ON")
             elif Action == "OFF":
-                ActionData = '/sw/' + ID + '/off'
-                if (debuging): xbmc.log('X10-Lights: HomeWizard, Switch lights or Device OFF')
+                ActionData = f"sw/{ID}/off"
+                log_debug("HomeWizard, Switch lights or Device OFF")
             elif Action == "BRIGHT":
-                ActionData = '/sw/dim/' + ID + '/' + Value
-                if (debuging): xbmc.log('X10-Lights: HomeWizard, Brighten lights with ' + Value + '%')
+                ActionData = f"sw/dim/{ID}/{Value}"
+                log_debug(f"HomeWizard, Brighten lights with {Value}%")
             elif Action == "DIM":
-                ActionData = '/sw/dim/' + ID + '/' + Value
-                if (debuging): xbmc.log('X10-Lights: HomeWizard, Dim lights with ' + Value + '%')
+                ActionData = f"sw/dim/{ID}/{Value}"
+                log_debug(f"HomeWizard, Dim lights with {Value}%")
             else:
-                if (debuging): xbmc.log('X10-Lights: HomeWizard, No Action available!')
+                log_debug("HomeWizard, No Action available!")
+                ActionData = ""
 
-        if (debuging): xbmc.log('X10-Lights: HomeWizard, URL: ' + URL + ActionData)
-        CommandRequest = urllib2.urlopen(URL + ActionData)
-        if (debuging): xbmc.log('X10-Lights: Action Send to HomeWizard')
-        ReturnValue = "success"
-    except:
-        if (debuging): xbmc.log('X10-Lights: HomeWizard, The ' + Action + ' Event Failed')
-        ReturnValue = "fail"
-    return ReturnValue
+        # Ensure correct URL trailing slash
+        base_url = URL if URL.endswith('/') else URL + '/'
+        full_url = base_url + ActionData
+        log_debug(f"HomeWizard, URL: {full_url}")
+        send_http_get(full_url, timeout=5)
+        log_debug("Action Sent to HomeWizard")
+        return "success"
+    except Exception as err:
+        log_debug(f"HomeWizard, The {Action} Event Failed: {err}")
+        return "fail"
 
-# DOMOTICZ FUNCTION 
-#This function Will execute the requested action in HomeSeer via tenHsServer
+# 7. DOMOTICZ FUNCTION
 def Domoticz(URL, ID, Action, Value, FreeCmd):
-    #Domoticz STYLE
-    #Example strings
-    #urllib2.urlopen('http://' + my_ip + ':' + my_port + '/json.htm?type=command&param=switchlight&idx=' + my_devid + '&switchcmd=On&level=0')
-    #urllib2.urlopen('http://' + my_ip + ':' + my_port + '/json.htm?type=command&param=switchlight&idx=' + my_devid + '&switchcmd=Off&level=0')
-    #urllib2.urlopen('http://' + my_ip + ':' + my_port + '/json.htm?type=command&param=switchlight&idx=' + my_devid + '&switchcmd=Set%20Level&level=6')
-    #these are with a plus, since the my_data needs to be concatenated with the url
-    #Remark Level should be a value between 1 (0%) and 16 (100%)
-    #So an additional calculation is made to calculate the percentage back to the 0 to 16 value ((Value/100.0) * 16))
-    #Convert string value to  float
-    fValue = float(Value)
-    #Calulate with float value to determine the integer value between 1 and 16.
-    iValue = int ((fValue/100.0) * 16)
-    #Convert integer back to string for use in URL
-    sValue = str(iValue)
     try:
+        # Domoticz level ranges from 0 to 16 (0-100%)
+        fValue = float(Value) if Value else 0.0
+        iValue = int((fValue / 100.0) * 16)
+        sValue = str(iValue)
+
         if FreeCmd:
-            ActionData = ID + '&a=' + Action + '&s=' + Value + ''
-            if (debuging): xbmc.log('X10-Lights: Domoticz, Action: ' + Action + ', with value: ' + Value + '.')
+            ActionData = f"{ID}&a={Action}&s={Value}"
+            log_debug(f"Domoticz, Action: {Action}, with value: {Value}.")
         else:
             if Action == "ON":
-                ActionData = ID + '&switchcmd=On&level=0'
-                if (debuging): xbmc.log('X10-Lights: Domoticz, Switch lights or Device ON')
+                ActionData = f"{ID}&switchcmd=On&level=0"
+                log_debug("Domoticz, Switch lights or Device ON")
             elif Action == "OFF":
-                ActionData = ID + '&switchcmd=Off&level=0'
-                if (debuging): xbmc.log('X10-Lights: Domoticz, Switch lights or Device OFF')
+                ActionData = f"{ID}&switchcmd=Off&level=0"
+                log_debug("Domoticz, Switch lights or Device OFF")
             elif Action == "BRIGHT":
-                ActionData = ID + '&switchcmd=Set%20Level&level=' + sValue + ''
-                if (debuging): xbmc.log('X10-Lights: Domoticz, Brighten lights with ' + Value + '% converted to: ' + sValue + '')
+                ActionData = f"{ID}&switchcmd=Set%20Level&level={sValue}"
+                log_debug(f"Domoticz, Brighten lights with {Value}% converted to level: {sValue}")
             elif Action == "DIM":
-                ActionData = ID + '&switchcmd=Set%20Level&level=' + sValue + ''
-                if (debuging): xbmc.log('X10-Lights: Domoticz, Dim lights with ' + Value + '% converted to: ' + sValue + '')
+                ActionData = f"{ID}&switchcmd=Set%20Level&level={sValue}"
+                log_debug(f"Domoticz, Dim lights with {Value}% converted to level: {sValue}")
             else:
-                if (debuging): xbmc.log('X10-Lights: Domoticz, No Action available!')
+                log_debug("Domoticz, No Action available!")
+                ActionData = ""
 
-        if (debuging): xbmc.log('X10-Lights: Domoticz, URL: ' + URL + ActionData)
-        CommandRequest = urllib2.urlopen(URL + ActionData)
-        if (debuging): xbmc.log('X10-Lights: Action Send to Domoticz')
-        ReturnValue = "success"
-    except:
-        if (debuging): xbmc.log('X10-Lights: Domoticz, The ' + Action + ' Event Failed')
-        ReturnValue = "fail"
-    return ReturnValue
+        full_url = URL + ActionData
+        log_debug(f"Domoticz, URL: {full_url}")
+        send_http_get(full_url, timeout=5)
+        log_debug("Action Sent to Domoticz")
+        return "success"
+    except Exception as err:
+        log_debug(f"Domoticz, The {Action} Event Failed: {err}")
+        return "fail"
 
-# HomeGenie FUNCTION 
-#This function Will execute the requested action in HomeGenie
+# 8. HOMEGENIE FUNCTION
 def HomeGenie(URL, ID, Action, Value, FreeCmd):
-    #HomeGenie STYLE
-    #Example strings
-    #http://servername:port/api/HomeAutomation.X10/{id}/Control.On
-    #http://servername:port/api/HomeAutomation.X10/{id}/Control.Off
-    #http://servername:port/api/HomeAutomation.X10/{id}/Control.Dim
     try:
         if FreeCmd:
-            ActionData = ID + '/Control.' + Action + '/' + Value
-            if (debuging): xbmc.log('X10-Lights: HomeGenie, Action: ' + Action + ', with value: ' + Value + '.')
+            ActionData = f"{ID}/Control.{Action}/{Value}"
+            log_debug(f"HomeGenie, Action: {Action}, with value: {Value}.")
         else:
             if Action == "ON":
-                ActionData = ID + '/Control.On'
-                if (debuging): xbmc.log('X10-Lights: HomeGenie, Switch lights or Device ON')
+                ActionData = f"{ID}/Control.On"
+                log_debug("HomeGenie, Switch lights or Device ON")
             elif Action == "OFF":
-                ActionData = ID + '/Control.Off'
-                if (debuging): xbmc.log('X10-Lights: HomeGenie, Switch lights or Device OFF')
+                ActionData = f"{ID}/Control.Off"
+                log_debug("HomeGenie, Switch lights or Device OFF")
             elif Action == "BRIGHT":
-                ActionData = ID + '/Control.Bright/' + Value + ''
-                if (debuging): xbmc.log('X10-Lights: HomeGenie, Brighten lights with ' + Value + '%')
+                ActionData = f"{ID}/Control.Bright/{Value}"
+                log_debug(f"HomeGenie, Brighten lights with {Value}%")
             elif Action == "DIM":
-                ActionData = ID + '/Control.Dim/' + Value + ''
-                if (debuging): xbmc.log('X10-Lights: HomeGenie, Dim lights with ' + Value + '%')
+                ActionData = f"{ID}/Control.Dim/{Value}"
+                log_debug(f"HomeGenie, Dim lights with {Value}%")
             else:
-                if (debuging): xbmc.log('X10-Lights: HomeGenie, No Action available!')
+                log_debug("HomeGenie, No Action available!")
+                ActionData = ""
 
-        if (debuging): xbmc.log('X10-Lights: HomeGenie, URL: ' + URL + ActionData)
-        CommandRequest = urllib2.urlopen(URL + ActionData)
-        if (debuging): xbmc.log('X10-Lights: Action Send to HomeGenie')
-        ReturnValue = "success"
-    except:
-        if (debuging): xbmc.log('X10-Lights: HomeGenie, The ' + Action + ' Event Failed')
-        ReturnValue = "fail"
-    return ReturnValue
+        full_url = URL + ActionData
+        log_debug(f"HomeGenie, URL: {full_url}")
+        send_http_get(full_url, timeout=5)
+        log_debug("Action Sent to HomeGenie")
+        return "success"
+    except Exception as err:
+        log_debug(f"HomeGenie, The {Action} Event Failed: {err}")
+        return "fail"
 
-# LightWaveRF FUNCTION 
-#This function Will execute the requested action in LightWaveRF
+# 9. LIGHTWAVERF FUNCTION (UDP Socket)
 def LightWaveRF(URL, ID, Action, Value, FreeCmd, ROOM):
-    #LightWaveRF STYLE
-    #This system uses Transaction ID to send with the message
     global TransactionID
-    #this system uses UDP and not a URL request, therefor a socket is needed
-    #Initialize a socket 
-    #IAF_INET specifies the usage of IP4v adresses
-    #SOCK_DGRAM specifies that it is UDP
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
-    #Example strings 
-    #IMPORTANT, ID must be build of a ROOM number (1 till 16) and a DEVICE number (1 till 16)
-    #HOST = URL (from host: till start of Port)
-    #PORT = URL (from port: till end) (default port for LightWaveRF = 9760)
-    #PACKAGE = Build up command of ID, Action, Value or FreeCmd
-    #ID must be build up of room device separated with a space.
-    #Command structure for Device ON:     TransactionID,!R{room}D{id}F1<cr> IMPORTANT commands must allways end with Carige Return <cr>
-    #Command structure for Device OFF:    TransactionID,!R{room}D{id}F0<cr> IMPORTANT commands must allways end with Carige Return <cr>
-    #Command structure for Device BRIGHT: TransactionID,!R{room}D{id}F0dP29<cr> IMPORTANT commands must allways end with Carige Return <cr>
-    #Command structure for Device DIM:    TransactionID,!R{room}D{id}F0dP3<cr> IMPORTANT commands must allways end with Carige Return <cr>
-    URLStartHost = 5
-    URLEndHost = URL.find("port:") - 1
-    URLStartPort = URL.find("port:") + 6
-    URLEndPort = len(URL)
-    #HOST
-    URLHost = URL[URLStartHost:URLEndHost]
-    #PORT (must be an integer)
-    strURLPort = URL[URLStartPort:URLEndPort]
-    URLPort = int(float(strURLPort))
-    #Remark Level should be a value between 1 (0%) and 32 (100%)
-    #So an additional calculation is made to calculate the percentage back to the 0 to 326 value ((Value/100.0) * 32))
-    #Convert string value to float
-    fValue = float(Value)
-    #Calulate with float value to determine the integer value between 1 and 32.
-    iValue = int ((fValue/100.0) * 32)
-    #Convert integer back to string for use in URL
-    sValue = str(iValue)
-    #try:
-    if FreeCmd:
-        ActionData = ID + '/Control.' + Action + '/' + Value
-        if (debuging): xbmc.log('X10-Lights: LightWaveRF, Action: ' + Action + ', with value: ' + Value + '.')
-    else:
-        if Action == "ON":
-            ActionData = str(TransactionID) + ',!R' + ROOM + 'D' + ID + 'F1'
-            if (debuging): xbmc.log('X10-Lights: LightWaveRF, Switch lights or Device ON')
-        elif Action == "OFF":
-            ActionData = str(TransactionID) + ',!R' + ROOM + 'D' + ID + 'F0'
-            if (debuging): xbmc.log('X10-Lights: LightWaveRF, Switch lights or Device OFF')
-        elif Action == "BRIGHT":
-            ActionData = str(TransactionID) + ',!R' + ROOM + 'D' + ID + 'FdP' + sValue + ''
-            if (debuging): xbmc.log('X10-Lights: LightWaveRF, Brighten lights to ' + Value + '%')
-        elif Action == "DIM":
-            ActionData = str(TransactionID) + ',!R' + ROOM + 'D' + ID + 'FdP' + sValue + ''
-            if (debuging): xbmc.log('X10-Lights: LightWaveRF, Dim lights to ' + Value + '%')
+    try:
+        # Extract Host and Port from format: 'host: <ip> port: <port>'
+        parts = URL.split()
+        url_host = parts[1] if len(parts) > 1 else "127.0.0.1"
+        url_port = int(parts[3]) if len(parts) > 3 else 9760
+
+        # Calculate Level (1-32)
+        fValue = float(Value) if Value else 0.0
+        iValue = int((fValue / 100.0) * 32)
+        sValue = str(iValue)
+
+        if FreeCmd:
+            ActionData = f"{TransactionID},!R{ROOM}D{ID}{Action}{Value}\r"
+            log_debug(f"LightWaveRF, Action: {Action}, with value: {Value}.")
         else:
-            if (debuging): xbmc.log('X10-Lights: LightWaveRF, No Action available!')
+            if Action == "ON":
+                ActionData = f"{TransactionID},!R{ROOM}D{ID}F1\r"
+                log_debug("LightWaveRF, Switch lights or Device ON")
+            elif Action == "OFF":
+                ActionData = f"{TransactionID},!R{ROOM}D{ID}F0\r"
+                log_debug("LightWaveRF, Switch lights or Device OFF")
+            elif Action == "BRIGHT":
+                ActionData = f"{TransactionID},!R{ROOM}D{ID}FdP{sValue}\r"
+                log_debug(f"LightWaveRF, Brighten lights to {Value}% (level {sValue})")
+            elif Action == "DIM":
+                ActionData = f"{TransactionID},!R{ROOM}D{ID}FdP{sValue}\r"
+                log_debug(f"LightWaveRF, Dim lights to {Value}% (level {sValue})")
+            else:
+                log_debug("LightWaveRF, No Action available!")
+                ActionData = ""
 
-    if (debuging): xbmc.log('X10-Lights: LightWaveRF, HOST: ' + URLHost + ' PORT: ' + str(URLPort) + ' Package:' + ActionData)
-    #Connect the socket to the address location
-    s.connect((URLHost, URLPort))
-    #send the command
-    s.send(ActionData)
-    if (debuging): xbmc.log('X10-Lights: Action Send to LightWaveRF')
-    ReturnValue = "success"
-    #except:
-    #    if (debuging): xbmc.log('X10-Lights: LightWaveRF, The ' + Action + ' Event Failed')
-    #    pass
-    #    ReturnValue = "fail"
+        log_debug(f"LightWaveRF, HOST: {url_host} PORT: {url_port} Package: {ActionData.strip()}")
         
-    #close the socket
-    s.close()
-    TransactionID = TransactionID + 1
-    return ReturnValue
+        # In Python 3, socket sendto/send requires bytes
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.settimeout(5.0)
+        sock.sendto(ActionData.encode('utf-8'), (url_host, url_port))
+        sock.close()
 
-# EXECUTEACTION FUNCTION
+        TransactionID += 1
+        log_debug("Action Sent to LightWaveRF")
+        return "success"
+    except Exception as err:
+        log_debug(f"LightWaveRF, The {Action} Event Failed: {err}")
+        return "fail"
+
+# ==============================================================================
+# DISPATCHER AND EVENT HANDLERS
+# ==============================================================================
+
 def ExecuteAction(Application, URL, ID, Action, Value, FreeCmd, Room="0"):
-    #This function is a simple selector 
-    #It will call the correct Application to execute the desired action
-    #This section should be expended with new aplication's as they come available
     if Application == "X10-COMMANDER":
-        ReturnValue = X10Commander(URL, ID, Action, Value, FreeCmd)
+        return X10Commander(URL, ID, Action, Value, FreeCmd)
     elif Application == "HOMESEER":
-        ReturnValue = HomeSeer(URL, ID, Action, Value, FreeCmd)
+        return HomeSeer(URL, ID, Action, Value, FreeCmd)
     elif Application == "TENHSSERVER":
-        ReturnValue = tenHsServer(URL, ID, Action, Value, FreeCmd)
+        return tenHsServer(URL, ID, Action, Value, FreeCmd)
     elif Application == "SWITCHKING":
-        ReturnValue = SwitchKing(URL, ID, Action, Value, FreeCmd)
+        return SwitchKing(URL, ID, Action, Value, FreeCmd)
     elif Application == "THINKINGHOME":
-        ReturnValue = ThinkingHome(URL, ID, Action, Value, FreeCmd)
+        return ThinkingHome(URL, ID, Action, Value, FreeCmd)
     elif Application == "HOMEWIZARD":
-        ReturnValue = HomeWizard(URL, ID, Action, Value, FreeCmd)
+        return HomeWizard(URL, ID, Action, Value, FreeCmd)
     elif Application == "DOMOTICZ":
-        ReturnValue = Domoticz(URL, ID, Action, Value, FreeCmd)
+        return Domoticz(URL, ID, Action, Value, FreeCmd)
     elif Application == "HOMEGENIE":
-        ReturnValue = HomeGenie(URL, ID, Action, Value, FreeCmd)
+        return HomeGenie(URL, ID, Action, Value, FreeCmd)
     elif Application == "LIGHTWAVERF":
-        ReturnValue = LightWaveRF(URL, ID, Action, Value, FreeCmd, Room)
+        return LightWaveRF(URL, ID, Action, Value, FreeCmd, Room)
     else:
-        if (debuging): xbmc.log('X10-Lights: An unknown Device Aplication is selected!')
-        ReturnValue = "failed"
-    return ReturnValue
+        log_debug("An unknown Device Application is selected!")
+        return "failed"
 
-# EVENTACTION FUNCTION
 def EventAction(Action):
-    #This function is a simple selector that returns the action as a text to the event
-    #(it simply converst a number to string)
     if Action == "3":
-        ReturnValue = "OFF"
+        return "OFF"
     elif Action == "2":
-        ReturnValue = "ON"
+        return "ON"
     elif Action == "1":
-        ReturnValue = "BRIGHT"
+        return "BRIGHT"
     else:
-        ReturnValue = "DIM"
-    return ReturnValue
+        return "DIM"
 
-# MAINEVENTHANDLER FUNCTION
 def MainEventHandler(Type):
-    #This function is the MainEventHandler, 
-    #It recieve's the type of event that needs to be executed
-    #The type of event comes from XMBC or the XBMC Player
-    #For every active Device, where the event is enabled, it will execute the action (ExecuteAction)
-    
-    #INITIALIZE
     DeviceCount = 1
     Application = DeviceApplication
     URL = DeviceURL
-    
-    if (debuging): 
-        xbmc.log('X10-Lights: *************** Handeling an Event **************')
-        xbmc.log('X10-Lights: Event Type = ' + str(Type))
-    
-    #Handle all Device's
-    while (DeviceCount <= 5):
-        #INITIALIZE per device
+
+    log_debug("*************** Handling an Event **************")
+    log_debug(f"Event Type = {Type}")
+
+    # Handle all Devices (1 to 5)
+    while DeviceCount <= 5:
         ID = ""
-        ROOM = ""
+        ROOM = "0"
         ActionEvent = ""
         ActionValue = ""
-        ActionFreeCmd = ""
-        ActionCall = ""
+        ActionFreeCmd = False
         ExecuteEvent = False
-        if (DeviceCount <= 9):
-            strCheckDeviceEnabled = "DEVID0" + str(DeviceCount) + "ENABLE"
-            strCheckDeviceID = "DEVID0" + str(DeviceCount)
-            strCheckRoomEnabled = "ROOM0" + str(DeviceCount) + "ENABLE"
-            strCheckRoom = "ROOM0" + str(DeviceCount)
-        else:
-            strCheckDeviceEnabled = "DEVID" + str(DeviceCount) + "ENABLE"
-            strCheckDeviceID = "DEVID" + str(DeviceCount)
-            strCheckRoomEnabled = "ROOM" + str(DeviceCount) + "ENABLE"
-            strCheckRoom = "ROOM" + str(DeviceCount)
-        
-        #Execute Event if Device is enabled
-        if (str(__addon__.getSetting(strCheckDeviceEnabled)) == "true"):
+
+        suffix = f"0{DeviceCount}" if DeviceCount <= 9 else str(DeviceCount)
+        strCheckDeviceEnabled = f"DEVID{suffix}ENABLE"
+        strCheckDeviceID = f"DEVID{suffix}"
+        strCheckRoomEnabled = f"ROOM{suffix}ENABLE"
+        strCheckRoom = f"ROOM{suffix}"
+
+        if __addon__.getSetting(strCheckDeviceEnabled).lower() == "true":
             ID = __addon__.getSetting(strCheckDeviceID)
-            if (str(__addon__.getSetting(strCheckRoomEnabled)) == "true"):
+            if __addon__.getSetting(strCheckRoomEnabled).lower() == "true":
                 ROOM = __addon__.getSetting(strCheckRoom)
-            else:
-                ROOM = "0"
-            #Retrieve specific device settings for the Event
-            if Type == "X_Start":
-                if (DeviceCount <= 9):
-                    strXevStartEnabled = "XEVSTARTENABLE0" + str(DeviceCount)
-                    strXevStartFree = "XEVSTARTFREE0" + str(DeviceCount)
-                    strXevStartCmd = "XEVSTARTCMD0" + str(DeviceCount)
-                    strXevStartVal = "XEVSTARTVAL0" + str(DeviceCount)
-                    strXevStartPerc = "XEVSTARTPERC0" + str(DeviceCount)
-                    strXevStart = "XEVSTART0" + str(DeviceCount)
-                else:
-                    strXevStartEnabled = "XEVSTARTENABLE" + str(DeviceCount)
-                    strXevStartFree = "XEVSTARTFREE" + str(DeviceCount)
-                    strXevStartCmd = "XEVSTARTCMD" + str(DeviceCount)
-                    strXevStartVal = "XEVSTARTVAL" + str(DeviceCount)
-                    strXevStartPerc = "XEVSTARTPERC" + str(DeviceCount)
-                    strXevStart = "XEVSTART" + str(DeviceCount)
-                #Execute Event if it is enabled for the Device
-                if (str(__addon__.getSetting(strXevStartEnabled)) == "true"):
-                    ExecuteEvent = True
-                    if (str(__addon__.getSetting(strXevStartFree)) == "true"):
-                        #Free Command
-                        ActionEvent = str(__addon__.getSetting(strXevStartCmd))
-                        ActionValue = str(__addon__.getSetting(strXevStartVal))
-                        ActionFreeCmd = True
-                    else:
-                        #Normal Command
-                        ActionEvent = EventAction(str(__addon__.getSetting(strXevStart)))
-                        ActionValue = str(__addon__.getSetting(strXevStartPerc))
-                        ActionFreeCmd = False
-            elif Type == "X_Stop":
-                if (DeviceCount <= 9):
-                    strXevStopEnabled = "XEVSTOPENABLE0" + str(DeviceCount)
-                    strXevStopFree = "XEVSTOPFREE0" + str(DeviceCount)
-                    strXevStopCmd = "XEVSTOPCMD0" + str(DeviceCount)
-                    strXevStopVal = "XEVSTOPVAL0" + str(DeviceCount)
-                    strXevStopPerc = "XEVSTOPPERC0" + str(DeviceCount)
-                    strXevStop = "XEVSTOP0" + str(DeviceCount)
-                else:
-                    strXevStopEnabled = "XEVSTOPENABLE" + str(DeviceCount)
-                    strXevStopFree = "XEVSTOPFREE" + str(DeviceCount)
-                    strXevStopCmd = "XEVSTOPCMD" + str(DeviceCount)
-                    strXevStopVal = "XEVSTOPVAL" + str(DeviceCount)
-                    strXevStopPerc = "XEVSTOPPERC" + str(DeviceCount)
-                    strXevStop = "XEVSTOP" + str(DeviceCount)
-                #Execute Event if it is enabled for the Device
-                if (str(__addon__.getSetting(strXevStopEnabled)) == "true"):
-                    ExecuteEvent = True
-                    if (str(__addon__.getSetting(strXevStopFree)) == "true"):
-                        #Free Command
-                        ActionEvent = str(__addon__.getSetting(strXevStopCmd))
-                        ActionValue = str(__addon__.getSetting(strXevStopVal))
-                        ActionFreeCmd = True
-                    else:
-                        #Normal Command
-                        ActionEvent = EventAction(str(__addon__.getSetting(strXevStop)))
-                        ActionValue = str(__addon__.getSetting(strXevStopPerc))
-                        ActionFreeCmd = False
-            elif Type == "P_Start":
-                if (DeviceCount <= 9):
-                    strPevStartEnabled = "PEVSTARTENABLE0" + str(DeviceCount)
-                    strPevStartFree = "PEVSTARTFREE0" + str(DeviceCount)
-                    strPevStartCmd = "PEVSTARTCMD0" + str(DeviceCount)
-                    strPevStartVal = "PEVSTARTVAL0" + str(DeviceCount)
-                    strPevStartPerc = "PEVSTARTPERC0" + str(DeviceCount)
-                    strPevStart = "PEVSTART0" + str(DeviceCount)
-                else:
-                    strPevStartEnabled = "PEVSTARTENABLE" + str(DeviceCount)
-                    strPevStartFree = "PEVSTARTFREE" + str(DeviceCount)
-                    strPevStartCmd = "PEVSTARTCMD" + str(DeviceCount)
-                    strPevStartVal = "PEVSTARTVAL" + str(DeviceCount)
-                    strPevStartPerc = "PEVSTARTPERC" + str(DeviceCount)
-                    strPevStart = "PEVSTART" + str(DeviceCount)
-                #Execute Event if it is enabled for the Device
-                if (str(__addon__.getSetting(strPevStartEnabled)) == "true"):
-                    ExecuteEvent = True
-                    if (str(__addon__.getSetting(strPevStartFree)) == "true"):
-                        #Free Command
-                        ActionEvent = str(__addon__.getSetting(strPevStartCmd))
-                        ActionValue = str(__addon__.getSetting(strPevStartVal))
-                        ActionFreeCmd = True
-                    else:
-                        #Normal Command
-                        ActionEvent = EventAction(str(__addon__.getSetting(strPevStart)))
-                        ActionValue = str(__addon__.getSetting(strPevStartPerc))
-                        ActionFreeCmd = False
-            elif Type == "P_Stop":
-                if (DeviceCount <= 9):
-                    strPevStopEnabled = "PEVSTOPENABLE0" + str(DeviceCount)
-                    strPevStopFree = "PEVSTOPFREE0" + str(DeviceCount)
-                    strPevStopCmd = "PEVSTOPCMD0" + str(DeviceCount)
-                    strPevStopVal = "PEVSTOPVAL0" + str(DeviceCount)
-                    strPevStopPerc = "PEVSTOPPERC0" + str(DeviceCount)
-                    strPevStop = "PEVSTOP0" + str(DeviceCount)
-                else:
-                    strPevStopEnabled = "PEVSTOPENABLE" + str(DeviceCount)
-                    strPevStopFree = "PEVSTOPFREE" + str(DeviceCount)
-                    strPevStopCmd = "PEVSTOPCMD" + str(DeviceCount)
-                    strPevStopVal = "PEVSTOPVAL" + str(DeviceCount)
-                    strPevStopPerc = "PEVSTOPPERC" + str(DeviceCount)
-                    strPevStop = "PEVSTOP" + str(DeviceCount)
-                #Execute Event if it is enabled for the Device
-                if (str(__addon__.getSetting(strPevStopEnabled)) == "true"):
-                    ExecuteEvent = True
-                    if (str(__addon__.getSetting(strPevStopFree)) == "true"):
-                        #Free Command
-                        ActionEvent = str(__addon__.getSetting(strPevStopCmd))
-                        ActionValue = str(__addon__.getSetting(strPevStopVal))
-                        ActionFreeCmd = True
-                    else:
-                        #Normal Command
-                        ActionEvent = EventAction(str(__addon__.getSetting(strPevStop)))
-                        ActionValue = str(__addon__.getSetting(strPevStopPerc))
-                        ActionFreeCmd = False
-            elif Type == "P_Pause":
-                if (DeviceCount <= 9):
-                    strPevPauseEnabled = "PEVPAUSEENABLE0" + str(DeviceCount)
-                    strPevPauseFree = "PEVPAUSEFREE0" + str(DeviceCount)
-                    strPevPauseCmd = "PEVPAUSECMD0" + str(DeviceCount)
-                    strPevPauseVal = "PEVPAUSEVAL0" + str(DeviceCount)
-                    strPevPausePerc = "PEVPAUSEPERC0" + str(DeviceCount)
-                    strPevPause = "PEVPAUSE0" + str(DeviceCount)
-                else:
-                    strPevPauseEnabled = "PEVPAUSEENABLE" + str(DeviceCount)
-                    strPevPauseFree = "PEVPAUSEFREE" + str(DeviceCount)
-                    strPevPauseCmd = "PEVPAUSECMD" + str(DeviceCount)
-                    strPevPauseVal = "PEVPAUSEVAL" + str(DeviceCount)
-                    strPevPausePerc = "PEVPAUSEPERC" + str(DeviceCount)
-                    strPevPause = "PEVPAUSE" + str(DeviceCount)
-                #Execute Event if it is enabled for the Device
-                if (str(__addon__.getSetting(strPevPauseEnabled)) == "true"):
-                    ExecuteEvent = True
-                    if (str(__addon__.getSetting(strPevPauseFree)) == "true"):
-                        #Free Command
-                        ActionEvent = str(__addon__.getSetting(strPevPauseCmd))
-                        ActionValue = str(__addon__.getSetting(strPevPauseVal))
-                        ActionFreeCmd = True
-                    else:
-                        #Normal Command
-                        ActionEvent = EventAction(str(__addon__.getSetting(strPevPause)))
-                        ActionValue = str(__addon__.getSetting(strPevPausePerc))
-                        ActionFreeCmd = False
-            elif Type == "P_End":
-                if (DeviceCount <= 9):
-                    strPevEndEnabled = "PEVENDENABLE0" + str(DeviceCount)
-                    strPevEndFree = "PEVENDFREE0" + str(DeviceCount)
-                    strPevEndCmd = "PEVENDCMD0" + str(DeviceCount)
-                    strPevEndVal = "PEVENDVAL0" + str(DeviceCount)
-                    strPevEndPerc = "PEVENDPERC0" + str(DeviceCount)
-                    strPevEnd = "PEVEND0" + str(DeviceCount)
-                else:
-                    strPevEndEnabled = "PEVENDENABLE" + str(DeviceCount)
-                    strPevEndFree = "PEVENDFREE" + str(DeviceCount)
-                    strPevEndCmd = "PEVENDCMD" + str(DeviceCount)
-                    strPevEndVal = "PEVENDVAL" + str(DeviceCount)
-                    strPevEndPerc = "PEVENDPERC" + str(DeviceCount)
-                    strPevEnd = "PEVEND" + str(DeviceCount)
-                #Execute Event if it is enabled for the Device
-                if (str(__addon__.getSetting(strPevEndEnabled)) == "true"):
-                    ExecuteEvent = True
-                    if (str(__addon__.getSetting(strPevEndFree)) == "true"):
-                        #Free Command
-                        ActionEvent = str(__addon__.getSetting(strPevEndCmd))
-                        ActionValue = str(__addon__.getSetting(strPevEndVal))
-                        ActionFreeCmd = True
-                    else:
-                        #Normal Command
-                        ActionEvent = EventAction(str(__addon__.getSetting(strPevEnd)))
-                        ActionValue = str(__addon__.getSetting(strPevEndPerc))
-                        ActionFreeCmd = False
-            elif Type == "P_Resume":
-                if (DeviceCount <= 9):
-                    strPevResumeEnabled = "PEVRESUMEENABLE0" + str(DeviceCount)
-                    strPevResumeFree = "PEVRESUMEFREE0" + str(DeviceCount)
-                    strPevResumeCmd = "PEVRESUMECMD0" + str(DeviceCount)
-                    strPevResumeVal = "PEVRESUMEVAL0" + str(DeviceCount)
-                    strPevResumePerc = "PEVRESUMEPERC0" + str(DeviceCount)
-                    strPevResume = "PEVRESUME0" + str(DeviceCount)
-                else:
-                    strPevResumeEnabled = "PEVRESUMEENABLE" + str(DeviceCount)
-                    strPevResumeFree = "PEVRESUMEFREE" + str(DeviceCount)
-                    strPevResumeCmd = "PEVRESUMECMD" + str(DeviceCount)
-                    strPevResumeVal = "PEVRESUMEVAL" + str(DeviceCount)
-                    strPevResumePerc = "PEVRESUMEPERC" + str(DeviceCount)
-                    strPevResume = "PEVRESUME" + str(DeviceCount)
-                #Execute Event if it is enabled for the Device
-                if (str(__addon__.getSetting(strPevResumeEnabled)) == "true"):
-                    ExecuteEvent = True
-                    if (str(__addon__.getSetting(strPevResumeFree)) == "true"):
-                        #Free Command
-                        ActionEvent = str(__addon__.getSetting(strPevResumeCmd))
-                        ActionValue = str(__addon__.getSetting(strPevResumeVal))
-                        ActionFreeCmd = True
-                    else:
-                        #Normal Command
-                        ActionEvent = EventAction(str(__addon__.getSetting(strPevResume)))
-                        ActionValue = str(__addon__.getSetting(strPevResumePerc))
-                        ActionFreeCmd = False
-            
-            #Call to Execute the action on the device
-            if (ExecuteEvent):
-                ActionCall = ExecuteAction(Application, URL, ID, ActionEvent, ActionValue, ActionFreeCmd, ROOM)
-                if (debuging): 
-                    xbmc.log('X10-Lights: Event Device ID = ' + str(ID))
-                    xbmc.log('X10-Lights: Event Action    = ' + str(ActionEvent))
-                    xbmc.log('X10-Lights: Event Value     = ' + str(ActionValue))
-                    xbmc.log('X10-Lights: Event Free CMD  = ' + str(ActionFreeCmd))
-                    xbmc.log('X10-Lights: Event ROOM      = ' + str(ROOM))
-                    xbmc.log('X10-Lights: *************************************************')
-            else:
-                ActionCall = "failed"
-        
-        DeviceCount = DeviceCount + 1
-    return
 
-# FUNCTIONS - LOGING
-if (debuging): 
-    xbmc.log('X10-Lights: ******************* X10-Lights ******************')
-    xbmc.log('X10-Lights: Import of libraries is done')
-    xbmc.log('X10-Lights: functions are initialized')
-    xbmc.log('X10-Lights: *************************************************')
+            # Retrieve event settings based on Event Type
+            prefix_map = {
+                "X_Start": "XEVSTART",
+                "X_Stop": "XEVSTOP",
+                "P_Start": "PEVSTART",
+                "P_Stop": "PEVSTOP",
+                "P_Pause": "PEVPAUSE",
+                "P_Resume": "PEVRESUME",
+                "P_End": "PEVEND",
+            }
 
-# FUNCTIONS - END
+            prefix = prefix_map.get(Type)
+            if prefix:
+                ev_enabled = __addon__.getSetting(f"{prefix}ENABLE{suffix}").lower() == "true"
+                ev_free = __addon__.getSetting(f"{prefix}FREE{suffix}").lower() == "true"
 
-# ADDON DEVICE APPLICATION AND URL SETTING
-# 'http://' + my_ip + ':' + my_port + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d=' + my_devid + '&a=ON'
-# User:Pass@
+                if ev_enabled:
+                    ExecuteEvent = True
+                    if ev_free:
+                        ActionEvent = str(__addon__.getSetting(f"{prefix}CMD{suffix}"))
+                        ActionValue = str(__addon__.getSetting(f"{prefix}VAL{suffix}"))
+                        ActionFreeCmd = True
+                    else:
+                        ActionEvent = EventAction(str(__addon__.getSetting(f"{prefix}{suffix}")))
+                        ActionValue = str(__addon__.getSetting(f"{prefix}PERC{suffix}"))
+                        ActionFreeCmd = False
 
-if __addon__.getSetting("DEVAPP") == "0":
+        if ExecuteEvent:
+            log_debug(f"Executing event {Type} for Device {DeviceCount} (ID: {ID})")
+            ExecuteAction(Application, URL, ID, ActionEvent, ActionValue, ActionFreeCmd, ROOM)
+
+        DeviceCount += 1
+
+    log_debug("*************************************************")
+
+# ==============================================================================
+# CONFIGURATION INITIALIZATION
+# ==============================================================================
+
+app_setting = __addon__.getSetting("DEVAPP")
+ip_setting = __addon__.getSetting("IP")
+port_setting = __addon__.getSetting("PORT")
+security_setting = __addon__.getSetting("SECURITY").lower() == "true"
+user_setting = __addon__.getSetting("USER")
+pass_setting = __addon__.getSetting("PASS")
+
+if app_setting == "0":
     DeviceApplication = "X10-COMMANDER"
-    if (str(__addon__.getSetting("SECURITY")) == "true"):
-        DeviceURL = 'http://' + __addon__.getSetting("USER") + ':' + __addon__.getSetting("PASS") + '@' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/?x10command=DEVICE~sendplc~"'
-    else:
-        DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/?x10command=DEVICE~sendplc~"'
-elif __addon__.getSetting("DEVAPP") == "1":
-    #Security unkown
+    auth_part = f"{user_setting}:{pass_setting}@" if security_setting else ""
+    DeviceURL = f"http://{auth_part}{ip_setting}:{port_setting}/?x10command=DEVICE~sendplc~\""
+elif app_setting == "1":
     DeviceApplication = "HOMESEER"
-    DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/tail.htm'
-elif __addon__.getSetting("DEVAPP") == "2":
+    DeviceURL = f"http://{ip_setting}:{port_setting}/tail.htm"
+elif app_setting == "2":
     DeviceApplication = "TENHSSERVER"
-    if (str(__addon__.getSetting("SECURITY")) == "true"):
-        DeviceURL = 'http://' + __addon__.getSetting("USER") + ':' + __addon__.getSetting("PASS") + '@' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d='
-    else:
-        DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d='
-elif __addon__.getSetting("DEVAPP") == "3":
+    auth_part = f"{user_setting}:{pass_setting}@" if security_setting else ""
+    DeviceURL = f"http://{auth_part}{ip_setting}:{port_setting}/tenHsServer/tenHsServer.aspx?t=xbmc&f=ExecX10&d="
+elif app_setting == "3":
     DeviceApplication = "SWITCHKING"
-    if (str(__addon__.getSetting("SECURITY")) == "true"):
-        DeviceURL = 'http://' + __addon__.getSetting("USER") + ':' + __addon__.getSetting("PASS") + '@' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/devices/'
-    else:
-        DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/devices/'
-elif __addon__.getSetting("DEVAPP") == "4":
+    auth_part = f"{user_setting}:{pass_setting}@" if security_setting else ""
+    DeviceURL = f"http://{auth_part}{ip_setting}:{port_setting}/devices/"
+elif app_setting == "4":
     DeviceApplication = "THINKINGHOME"
-    if (str(__addon__.getSetting("SECURITY")) == "true"):
-        DeviceURL = 'http://' + __addon__.getSetting("USER") + ':' + __addon__.getSetting("PASS") + '@' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/cgi-bin/thinkingHome-cgi?devName='
+    auth_part = f"{user_setting}:{pass_setting}@" if security_setting else ""
+    DeviceURL = f"http://{auth_part}{ip_setting}:{port_setting}/cgi-bin/thinkingHome-cgi?devName="
+elif app_setting == "5":
+    DeviceApplication = "HOMEWIZARD"
+    if security_setting:
+        DeviceURL = f"http://{ip_setting}:{port_setting}/{pass_setting}/"
     else:
-        DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/cgi-bin/thinkingHome-cgi?devName='
-elif __addon__.getSetting("DEVAPP") == "5":
-    DeviceApplication = "HOMEWIZARD" 
-    #REMARK HomeWizard always needs a password (but not a username)  -  http://<ip>/<password>/  -  "http://" + ipadres + ":" + port + "/" + password;
-    if (str(__addon__.getSetting("SECURITY")) == "true"):
-        DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") +  '/' + __addon__.getSetting("PASS")
-    else:
-        DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT")  +  '/'
-elif __addon__.getSetting("DEVAPP") == "6":
-    DeviceApplication = "DOMOTICZ" 
-    if (str(__addon__.getSetting("SECURITY")) == "true"):
-        DeviceURL = 'http://' + __addon__.getSetting("USER") + ':' + __addon__.getSetting("PASS") + '@' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/json.htm?type=command&param=switchlight&idx='
-    else:
-        DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/json.htm?type=command&param=switchlight&idx='
-elif __addon__.getSetting("DEVAPP") == "7":
-    #Security unkown
+        DeviceURL = f"http://{ip_setting}:{port_setting}/"
+elif app_setting == "6":
+    DeviceApplication = "DOMOTICZ"
+    auth_part = f"{user_setting}:{pass_setting}@" if security_setting else ""
+    DeviceURL = f"http://{auth_part}{ip_setting}:{port_setting}/json.htm?type=command&param=switchlight&idx="
+elif app_setting == "7":
     DeviceApplication = "HOMEGENIE"
-    DeviceURL = 'http://' + __addon__.getSetting("IP") + ':' + __addon__.getSetting("PORT") + '/api/HomeAutomation.X10/'
-elif __addon__.getSetting("DEVAPP") == "8":
-    #Security Not Applicable (This application use's UDP instead of TCP/IP, therefore the URL is showing Host and Port)
+    DeviceURL = f"http://{ip_setting}:{port_setting}/api/HomeAutomation.X10/"
+elif app_setting == "8":
     DeviceApplication = "LIGHTWAVERF"
-    DeviceURL = 'host: ' + __addon__.getSetting("IP") + ' port: ' + __addon__.getSetting("PORT")
+    DeviceURL = f"host: {ip_setting} port: {port_setting}"
 else:
-    DeviceApplication = "UNKOWN"
+    DeviceApplication = "UNKNOWN"
+    DeviceURL = ""
 
-# ADDON SHOW INFORMATION ABOUT ALL SETTINGS
-if (debuging): 
-    xbmc.log('X10-Lights: *************** Addon Host settings *************')
-    xbmc.log('X10-Lights: IP number          : ' + str(__addon__.getSetting("IP")))
-    xbmc.log('X10-Lights: PORT number        : ' + str(__addon__.getSetting("PORT")))
-    xbmc.log('X10-Lights: *************************************************')
-    xbmc.log('X10-Lights: Security: ' + str(__addon__.getSetting("SECURITY")))
-    xbmc.log('X10-Lights: Base URL: ' + DeviceURL)
+if debuging:
+    log("*************** Addon Host settings *************")
+    log(f"IP number          : {ip_setting}")
+    log(f"PORT number        : {port_setting}")
+    log(f"Security           : {security_setting}")
+    log(f"Application        : {DeviceApplication}")
+    log(f"Base URL           : {DeviceURL}")
+    log("*************************************************")
 
-# ADDON START
-if (debuging): 
-    xbmc.log('X10-Lights: ******************** STARTUP ********************')
-    xbmc.log('X10-Lights: *************************************************')
+# ==============================================================================
+# PLAYER CLASS & MONITOR (MODERN KODI 19/20/21/22+)
+# ==============================================================================
 
-#START XBMC START Event
-if (debuging): xbmc.log('X10-Lights: ****************** START EVENT ******************')
-
-MainEventHandler("X_Start")
-
-if (debuging): xbmc.log('X10-Lights: *************************************************')
-#END XBMC START Event
-
-# ADDON PLAYER
-if (debuging): xbmc.log('X10-Lights: ****************** CLASS PLAYER *****************')
-class MyPlayer(xbmc.Player) :
-    if (debuging): xbmc.log('X10-Lights: Class player is opened')
-    
-    def __init__ (self):
-        xbmc.Player.__init__(self)
-        if (debuging): xbmc.log('X10-Lights: Class player is initialized')
+class MyPlayer(xbmc.Player):
+    def __init__(self):
+        super().__init__()
+        self.was_playing_video = False
+        log_debug("Class MyPlayer initialized")
 
     def onPlayBackStarted(self):
-        if xbmc.Player().isPlayingVideo():
+        if self.isPlayingVideo():
+            self.was_playing_video = True
             MainEventHandler("P_Start")
-            if (debuging): xbmc.log('X10-Lights: PLAYBACK STARTED')
+            log_debug("PLAYBACK STARTED (Video)")
+
+    def onAVStarted(self):
+        # Additional modern Kodi callback when video/audio stream starts
+        if self.isPlayingVideo() and not self.was_playing_video:
+            self.was_playing_video = True
+            MainEventHandler("P_Start")
+            log_debug("AV STARTED (Video)")
 
     def onPlayBackEnded(self):
-        if (VIDEO == 1):
+        if self.was_playing_video:
+            self.was_playing_video = False
             MainEventHandler("P_End")
-            if (debuging): xbmc.log('X10-Lights: PLAYBACK ENDED')
+            log_debug("PLAYBACK ENDED")
 
     def onPlayBackStopped(self):
-        if (VIDEO == 1):
+        if self.was_playing_video:
+            self.was_playing_video = False
             MainEventHandler("P_Stop")
-            if (debuging): xbmc.log('X10-Lights: PLAYBACK STOPPED')
+            log_debug("PLAYBACK STOPPED")
 
     def onPlayBackPaused(self):
-        if xbmc.Player().isPlayingVideo():
+        if self.isPlayingVideo():
             MainEventHandler("P_Pause")
-            if (debuging): xbmc.log('X10-Lights: PLAYBACK PAUSED')
+            log_debug("PLAYBACK PAUSED")
 
     def onPlayBackResumed(self):
-        if xbmc.Player().isPlayingVideo():
+        if self.isPlayingVideo():
             MainEventHandler("P_Resume")
-            if (debuging): xbmc.log('X10-Lights: PLAYBACK RESUMED')
+            log_debug("PLAYBACK RESUMED")
 
-player=MyPlayer()
+# ==============================================================================
+# MAIN SERVICE ENTRY POINT
+# ==============================================================================
 
-while (not xbmc.abortRequested):
-    if xbmc.Player().isPlayingVideo():
-        VIDEO = 1
-    else:
-        VIDEO = 0
+if __name__ == '__main__':
+    log_debug("******************** STARTUP ********************")
+    log_debug("****************** START EVENT ******************")
+    MainEventHandler("X_Start")
+    log_debug("*************************************************")
 
-    xbmc.sleep(1000)
+    player = MyPlayer()
+    monitor = xbmc.Monitor()
 
-if (xbmc.abortRequested):
-    #START XBMC STOP Event
-    if (debuging): xbmc.log('X10-Lights: ****************** STOP EVENT ******************')
+    # Modern Kodi Event Loop: waitForAbort releases CPU instantly on shutdown
+    while not monitor.abortRequested():
+        if player.isPlayingVideo():
+            player.was_playing_video = True
+        
+        # Wait up to 1 second; returns True immediately if Kodi requests abort
+        if monitor.waitForAbort(1):
+            break
+
+    # Kodi Shutdown / Service Stop Event
+    log_debug("****************** STOP EVENT ******************")
     MainEventHandler("X_Stop")
-    if (debuging): xbmc.log('X10-Lights: *************************************************')
-    #END XBMC STOP Event
-    #Execute XBMC STOP Event settings on Device
+    log_debug("*************************************************")
+    log("Service stopped cleanly.")

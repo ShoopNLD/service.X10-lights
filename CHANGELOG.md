@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.0.0] - 2026-11-14
+### Changed
+- **Python 3 Migration:** Complete migration from Python 2 to Python 3 for compatibility with modern Kodi releases (Matrix v19, Nexus v20, Omega v21, Piers v22+).
+- **Core Monitor:** Replaced the legacy `while not xbmc.abortRequested` polling loop with modern, event-driven `xbmc.Monitor().waitForAbort()`.
+- **Network I/O:** Migrated `urllib` / `urllib2` calls to `urllib.request` and `urllib.parse` with explicit 5-second timeouts to prevent blocking Kodi's main interface.
+- **UDP Sockets:** Converted socket payloads for LightWaveRF to `bytes` (`utf-8`).
+- **Authentication:** Standardized HTTP Basic Auth via base64 encoded `Authorization` header.
+- **Kodi Metadata:** Updated `addon.xml` to `xbmc.python` API version `3.0.0` and added asset references.
+
+### Added
+- **Translations:** Added official Kodi gettext PO translation catalogs (`resource.language.en_gb` and `resource.language.nl_nl`).
+
+---
+
 ## [1.0.4] - 2014-04-06
 ### Added
 - LightWaveRF support (controlling devices via UDP broadcast sockets).

@@ -1,0 +1,160 @@
+# Kodi Media Center language file
+# Addon Name: X10 - Lights (Domotica Commander)
+# Addon id: service.X10-lights
+msgid ""
+msgstr ""
+"Project-Id-Version: service.X10-lights\n"
+"Last-Translator: Majestic Soft <X10-Lights@majesticsoft.nl>\n"
+"Language: en_GB\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgctxt "#30500"
+msgid "Host settings"
+msgstr "Host settings"
+
+msgctxt "#30501"
+msgid "Device 01"
+msgstr "Device 01"
+
+msgctxt "#30502"
+msgid "Device 02"
+msgstr "Device 02"
+
+msgctxt "#30503"
+msgid "Device 03"
+msgstr "Device 03"
+
+msgctxt "#30504"
+msgid "Device 04"
+msgstr "Device 04"
+
+msgctxt "#30505"
+msgid "Device 05"
+msgstr "Device 05"
+
+msgctxt "#30000"
+msgid "Application IP address"
+msgstr "Application IP address"
+
+msgctxt "#30001"
+msgid "Application Port"
+msgstr "Application Port"
+
+msgctxt "#30002"
+msgid "Application Security"
+msgstr "Application Security"
+
+msgctxt "#30003"
+msgid "Application Username"
+msgstr "Application Username"
+
+msgctxt "#30004"
+msgid "Application Password"
+msgstr "Application Password"
+
+msgctxt "#30005"
+msgid "Application Debugging"
+msgstr "Application Debugging"
+
+msgctxt "#30100"
+msgid "Device Application"
+msgstr "Device Application"
+
+msgctxt "#30101"
+msgid "Device ID 01"
+msgstr "Device ID 01"
+
+msgctxt "#30102"
+msgid "Device ID 02"
+msgstr "Device ID 02"
+
+msgctxt "#30103"
+msgid "Device ID 03"
+msgstr "Device ID 03"
+
+msgctxt "#30104"
+msgid "Device ID 04"
+msgstr "Device ID 04"
+
+msgctxt "#30105"
+msgid "Device ID 05"
+msgstr "Device ID 05"
+
+msgctxt "#30200"
+msgid "Action"
+msgstr "Action"
+
+msgctxt "#30201"
+msgid "Percentage (%)"
+msgstr "Percentage (%)"
+
+msgctxt "#30202"
+msgid "Command"
+msgstr "Command"
+
+msgctxt "#30203"
+msgid "Value"
+msgstr "Value"
+
+msgctxt "#30204"
+msgid "Player Start event"
+msgstr "Player Start event"
+
+msgctxt "#30205"
+msgid "Player Stop event"
+msgstr "Player Stop event"
+
+msgctxt "#30206"
+msgid "Player Pause event"
+msgstr "Player Pause event"
+
+msgctxt "#30207"
+msgid "Player Resume event"
+msgstr "Player Resume event"
+
+msgctxt "#30208"
+msgid "Player End event"
+msgstr "Player End event"
+
+msgctxt "#30209"
+msgid "Free definable Action"
+msgstr "Free definable Action"
+
+msgctxt "#30210"
+msgid "Device Active"
+msgstr "Device Active"
+
+msgctxt "#30211"
+msgid "XBMC Start event"
+msgstr "XBMC Start event"
+
+msgctxt "#30212"
+msgid "XBMC Stop event"
+msgstr "XBMC Stop event"
+
+msgctxt "#30213"
+msgid "Room Active (LightWaveRF only)"
+msgstr "Room Active (LightWaveRF only)"
+
+msgctxt "#30301"
+msgid "Room for Device ID 01"
+msgstr "Room for Device ID 01"
+
+msgctxt "#30302"
+msgid "Room for Device ID 02"
+msgstr "Room for Device ID 02"
+
+msgctxt "#30303"
+msgid "Room for Device ID 03"
+msgstr "Room for Device ID 03"
+
+msgctxt "#30304"
+msgid "Room for Device ID 04"
+msgstr "Room for Device ID 04"
+
+msgctxt "#30305"
+msgid "Room for Device ID 05"
+msgstr "Room for Device ID 05"
+
