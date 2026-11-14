@@ -10,7 +10,7 @@
 
 **X10 - Lights (Domotica Commander)** (`service.X10-lights`) is a Kodi / XBMC background service add-on that automatically switches, dims, or brightens home theater lighting and smart home devices based on media player and system events.
 
-![XBMC Picture](docs/screenshots/XBMC%20picture.png)
+![XBMC Picture](docs/screenshots/banner.png)
 
 ---
 

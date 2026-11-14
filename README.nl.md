@@ -10,7 +10,7 @@
 
 **X10 - Lights (Domotica Commander)** (`service.X10-lights`) is een achtergrondservice add-on voor XBMC / Kodi die bioscoopverlichting en domotica-apparaten automatisch bedient op basis van mediaspeler- en systeemgebeurtenissen.
 
-![XBMC Picture](docs/screenshots/XBMC%20picture.png)
+![XBMC Picture](docs/screenshots/banner.png)
 
 ---
 
